@@ -1,0 +1,11 @@
+Package: util.390816171110
+Type: Package
+Title: my own utilities
+Version: 1.0
+Date: 2023-08-17
+Author: calvin
+Maintainer: calvin <214733622@qq.com>
+Description: TBD
+License: TBD
+Encoding: UTF-8
+Depends: utils, data.table
