@@ -1,6 +1,5 @@
 home.38_06_06_130655 <- path.expand("~")
 hs.home.expand <- function(fp1, q = 0) {
-    message("2023_08_17_182303")
     for (i in seq_along(fp1)) {
         a <- fp1[i]
         if ((a == "~") || (substr(a, 1, 2) == "~/")) 
