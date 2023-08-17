@@ -8,4 +8,4 @@ Maintainer: calvin <214733622@qq.com>
 Description: TBD
 License: TBD
 Encoding: UTF-8
-Depends: utils, data.table
+Depends: utils, data.table, MatrixGenerics

@@ -89,6 +89,242 @@ structure(function (s1, p1, r1 = {
 hs.sub <-
 function (x, pattern, replacement = "", fixed = FALSE, perl = !fixed, ...) 
 sub(pattern, x, replacement = replacement, ..., perl = perl, fixed = fixed)
+hs.colAlls <-
+function (x, na.rm = TRUE, ...) 
+{
+    if (!inherits(x, c("matrix", "Matrix"))) 
+        x <- as.matrix(x)
+    MatrixGenerics::"colAlls"(x, na.rm = na.rm, ...)
+}
+hs.colAnys <-
+function (x, na.rm = TRUE, ...) 
+{
+    if (!inherits(x, c("matrix", "Matrix"))) 
+        x <- as.matrix(x)
+    MatrixGenerics::"colAnys"(x, na.rm = na.rm, ...)
+}
+hs.colCumsums <-
+function (x, na.rm = TRUE, ...) 
+{
+    if (!inherits(x, c("matrix", "Matrix"))) 
+        x <- as.matrix(x)
+    MatrixGenerics::"colCumsums"(x, na.rm = na.rm, ...)
+}
+hs.colCvs <-
+function (x) 
+{
+    Mean <- hs.colMeans(x)
+    Sd <- hs.colSds(x)
+    Sd/Mean
+}
+hs.colMads <-
+function (x, na.rm = TRUE, ...) 
+{
+    if (!inherits(x, c("matrix", "Matrix"))) 
+        x <- as.matrix(x)
+    MatrixGenerics::"colMads"(x, na.rm = na.rm, ...)
+}
+hs.colMaxs <-
+function (x, na.rm = TRUE, ...) 
+{
+    if (!inherits(x, c("matrix", "Matrix"))) 
+        x <- as.matrix(x)
+    MatrixGenerics::"colMaxs"(x, na.rm = na.rm, ...)
+}
+hs.colMeans <-
+function (x, na.rm = TRUE, ...) 
+{
+    if (!inherits(x, c("matrix", "Matrix"))) 
+        x <- as.matrix(x)
+    MatrixGenerics::"colMeans2"(x, na.rm = na.rm, ...)
+}
+hs.colMedians <-
+function (x, na.rm = TRUE, ...) 
+{
+    if (!inherits(x, c("matrix", "Matrix"))) 
+        x <- as.matrix(x)
+    MatrixGenerics::"colMedians"(x, na.rm = na.rm, ...)
+}
+hs.colMins <-
+function (x, na.rm = TRUE, ...) 
+{
+    if (!inherits(x, c("matrix", "Matrix"))) 
+        x <- as.matrix(x)
+    MatrixGenerics::"colMins"(x, na.rm = na.rm, ...)
+}
+hs.colProds <-
+function (x, na.rm = TRUE, ...) 
+{
+    if (!inherits(x, c("matrix", "Matrix"))) 
+        x <- as.matrix(x)
+    MatrixGenerics::"colProds"(x, na.rm = na.rm, ...)
+}
+hs.colSds <-
+function (x, na.rm = TRUE, ...) 
+{
+    if (!inherits(x, c("matrix", "Matrix"))) 
+        x <- as.matrix(x)
+    MatrixGenerics::"colSds"(x, na.rm = na.rm, ...)
+}
+hs.colSums <-
+function (x, na.rm = TRUE, ...) 
+{
+    if (!inherits(x, c("matrix", "Matrix"))) 
+        x <- as.matrix(x)
+    MatrixGenerics::"colSums2"(x, na.rm = na.rm, ...)
+}
+hs.colVars <-
+function (x, na.rm = TRUE, ...) 
+{
+    if (!inherits(x, c("matrix", "Matrix"))) 
+        x <- as.matrix(x)
+    MatrixGenerics::"colVars"(x, na.rm = na.rm, ...)
+}
+hs.rowAlls <-
+function (x, na.rm = TRUE, ...) 
+{
+    if (!inherits(x, c("matrix", "Matrix"))) 
+        x <- as.matrix(x)
+    MatrixGenerics::"rowAlls"(x, na.rm = na.rm, ...)
+}
+hs.rowAnys <-
+function (x, na.rm = TRUE, ...) 
+{
+    if (!inherits(x, c("matrix", "Matrix"))) 
+        x <- as.matrix(x)
+    MatrixGenerics::"rowAnys"(x, na.rm = na.rm, ...)
+}
+hs.rowCumsums <-
+function (x, na.rm = TRUE, ...) 
+{
+    if (!inherits(x, c("matrix", "Matrix"))) 
+        x <- as.matrix(x)
+    MatrixGenerics::"rowCumsums"(x, na.rm = na.rm, ...)
+}
+hs.rowCvs <-
+function (x) 
+{
+    Mean <- hs.rowMeans(x)
+    Sd <- hs.rowSds(x)
+    Sd/Mean
+}
+hs.rowMads <-
+function (x, na.rm = TRUE, ...) 
+{
+    if (!inherits(x, c("matrix", "Matrix"))) 
+        x <- as.matrix(x)
+    MatrixGenerics::"rowMads"(x, na.rm = na.rm, ...)
+}
+hs.rowMaxs <-
+function (x, na.rm = TRUE, ...) 
+{
+    if (!inherits(x, c("matrix", "Matrix"))) 
+        x <- as.matrix(x)
+    MatrixGenerics::"rowMaxs"(x, na.rm = na.rm, ...)
+}
+hs.rowMeans <-
+function (x, na.rm = TRUE, ...) 
+{
+    if (!inherits(x, c("matrix", "Matrix"))) 
+        x <- as.matrix(x)
+    MatrixGenerics::"rowMeans2"(x, na.rm = na.rm, ...)
+}
+hs.rowMedians <-
+function (x, na.rm = TRUE, ...) 
+{
+    if (!inherits(x, c("matrix", "Matrix"))) 
+        x <- as.matrix(x)
+    MatrixGenerics::"rowMedians"(x, na.rm = na.rm, ...)
+}
+hs.rowMins <-
+function (x, na.rm = TRUE, ...) 
+{
+    if (!inherits(x, c("matrix", "Matrix"))) 
+        x <- as.matrix(x)
+    MatrixGenerics::"rowMins"(x, na.rm = na.rm, ...)
+}
+hs.rowProds <-
+function (x, na.rm = TRUE, ...) 
+{
+    if (!inherits(x, c("matrix", "Matrix"))) 
+        x <- as.matrix(x)
+    MatrixGenerics::"rowProds"(x, na.rm = na.rm, ...)
+}
+hs.rowSds <-
+function (x, na.rm = TRUE, ...) 
+{
+    if (!inherits(x, c("matrix", "Matrix"))) 
+        x <- as.matrix(x)
+    MatrixGenerics::"rowSds"(x, na.rm = na.rm, ...)
+}
+hs.rowSums <-
+function (x, na.rm = TRUE, ...) 
+{
+    if (!inherits(x, c("matrix", "Matrix"))) 
+        x <- as.matrix(x)
+    MatrixGenerics::"rowSums2"(x, na.rm = na.rm, ...)
+}
+hs.rowVars <-
+function (x, na.rm = TRUE, ...) 
+{
+    if (!inherits(x, c("matrix", "Matrix"))) 
+        x <- as.matrix(x)
+    MatrixGenerics::"rowVars"(x, na.rm = na.rm, ...)
+}
+hs.grepV <- function(..., hs0 = {
+}) {
+    if (length(hs0)) {
+        xi <- match("x", ...names(), nomatch = 1)
+        x <- hs0(...elt(xi))
+        L <- list(...)
+        L[[xi]] <- x
+        i <- do.call(hs.grep, L)
+        ...elt(xi)[i]
+    }
+    else hs.grep(..., v = 1)
+}
+hs.grep_sub <- function(v, p, r = "", ...) {
+    a <- hs.grepV(v, p, ...)
+    hs.sub(a, p, r, ...)
+}
+hs.re.capture <- local({
+    match.hs.capture <- function(m1, c1) {
+        m2 <- attr(m1, "capture.start")[, c1]
+        attr(m2, "match.length") <- attr(m1, "capture.length")[, c1]
+        m2
+    }
+    function(s1, p1, c1 = {
+    }, all = 0) {
+        m1 <- (if (all) 
+            gregexpr
+        else regexpr)(p1, s1, perl = TRUE)
+        if (is.list(m1)) 
+            "capture.start" %in% names(attributes(m1[[1]]))
+        cn.db <- attr(if (all) m1[[1]] else m1, "capture.names")
+        c1 <- if (length(c1)) {
+            if (is.character(c1)) {
+                if (any(c1 %not.in% cn.db)) 
+                  hs.browser("37.04.15.182833")
+                match(c1, cn.db)
+            }
+            else if (is.numeric(c1)) {
+                if (any(c1 %not.in% seq_along(cn.db))) 
+                  hs.browser("37.04.15.184825")
+                c1
+            }
+            else hs.browser("37.04.15.182809")
+        }
+        else seq_along(cn.db)
+        jg <- lapply(c1, function(c1) {
+            cm <- if (all) 
+                lapply(m1, match.hs.capture, c1)
+            else match.hs.capture(m1, c1)
+            regmatches(s1, cm)
+        })
+        names(jg) <- cn.db
+        jg
+    }
+})
 hs.has_x <- function(E) {
     if (length(E) > 1) {
         any(sapply(E, hs.has_x))
@@ -123,7 +359,7 @@ hs.has_x <- function(E) {
             }
         }
         else {
-            if (is.symbol(e) && eval(bquote(is.function(.(e))), envir = env)) {
+            if (is.symbol(e) && do.call(is.function, list(e), envir = env) || e[[1]] == quote(hs.hsgly)) {
                 e <- bquote(.(e)(x))
             }
             else if (inherits(e, c("{", "("))) {
@@ -165,7 +401,7 @@ hs.pipe1 <- function(..., env.2023_07_24_205312 = parent.frame()) {
     hs.switch(...length(), 1, ..1, 0, {
     }, {
         x <- ..1
-        for (i1 in seq(3, length(A))) x <- eval(bquote(.(x) %=>% .(A[[i1]])), envir = env.2023_07_24_205312)
+        for (i1 in seq(3, length(A))) x <- do.call("%=>%", list(x, A[[i1]]), envir = env.2023_07_24_205312)
         x
     })
 }
@@ -783,6 +1019,7 @@ hs.init <- function(wjj = wk.dm.wjj, smart = 1) {
             })
 }
 hs.init1 <- function() {
+    .s()
     if (!exists("wk.ssh", envir = .GlobalEnv)) 
         assign("wk.ssh", {
         }, envir = .GlobalEnv)
@@ -4608,60 +4845,6 @@ hs.pastec <- function(..., collapse = " ") .Internal(paste0(list(c(...)), collap
 hs.pastec0 <- function(...) .Internal(paste0(list(c(...)), ""))
 hs.pastec. <- function(...) .Internal(paste0(list(c(...)), "."))
 hs.pastec_ <- function(...) .Internal(paste0(list(c(...)), "_"))
-hs.grepV <- function(..., hs0 = {
-}) {
-    if (length(hs0)) {
-        xi <- match("x", ...names(), nomatch = 1)
-        x <- hs0(...elt(xi))
-        L <- list(...)
-        L[[xi]] <- x
-        i <- do.call(hs.grep, L)
-        ...elt(xi)[i]
-    }
-    else hs.grep(..., v = 1)
-}
-hs.grep_sub <- function(v, p, r = "", ...) {
-    a <- hs.grepV(v, p, ...)
-    hs.sub(a, p, r, ...)
-}
-hs.re.capture <- local({
-    match.hs.capture <- function(m1, c1) {
-        m2 <- attr(m1, "capture.start")[, c1]
-        attr(m2, "match.length") <- attr(m1, "capture.length")[, c1]
-        m2
-    }
-    function(s1, p1, c1 = {
-    }, all = 0) {
-        m1 <- (if (all) 
-            gregexpr
-        else regexpr)(p1, s1, perl = TRUE)
-        if (is.list(m1)) 
-            "capture.start" %in% names(attributes(m1[[1]]))
-        cn.db <- attr(if (all) m1[[1]] else m1, "capture.names")
-        c1 <- if (length(c1)) {
-            if (is.character(c1)) {
-                if (any(c1 %not.in% cn.db)) 
-                  hs.browser("37.04.15.182833")
-                match(c1, cn.db)
-            }
-            else if (is.numeric(c1)) {
-                if (any(c1 %not.in% seq_along(cn.db))) 
-                  hs.browser("37.04.15.184825")
-                c1
-            }
-            else hs.browser("37.04.15.182809")
-        }
-        else seq_along(cn.db)
-        jg <- lapply(c1, function(c1) {
-            cm <- if (all) 
-                lapply(m1, match.hs.capture, c1)
-            else match.hs.capture(m1, c1)
-            regmatches(s1, cm)
-        })
-        names(jg) <- cn.db
-        jg
-    }
-})
 re.helper <- function(a, data) {
     att <- attributes(a)
     x <- a
