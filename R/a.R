@@ -6888,19 +6888,16 @@ wk.xls.write <- function(bg, wj, sheetName = "Sheet1", cn = 1, rn = 0, append = 
     openxlsx::write.xlsx(bg, hs.wj(file), rowNames = as.logical(rn), colNames = as.logical(cn), colWidths = widths)
     wj
 }
-wk.2xls <- local({
-    hs.require("openxlsx")
-    function(w1 = ".", ow = 0) {
-        if (dir.exists(w1)) 
-            w1 <- hs.wjj.ls(w1, "\\.(tsv|csv)(\\.gz)?$", R = 1)
-        wk.mclapply(w1, function(w1) {
-            w2 <- hs.sub(w1, "\\.(tsv|csv)(\\.gz)?$", ".xlsx")
-            if ((!file.exists(w2)) || ow) 
-                fread(w1) %=>% openxlsx::write.xlsx(w2)
-            w2
-        }) %=>% unlist
-    }
-})
+wk.2xls <- function(w1 = ".", ow = 0) {
+    if (dir.exists(w1)) 
+        w1 <- hs.wjj.ls(w1, "\\.(tsv|csv)(\\.gz)?$", R = 1)
+    wk.mclapply(w1, function(w1) {
+        w2 <- hs.sub(w1, "\\.(tsv|csv)(\\.gz)?$", ".xlsx")
+        if ((!file.exists(w2)) || ow) 
+            wk.fread(w1) %=>% openxlsx::write.xlsx(w2)
+        w2
+    }) %=>% unlist
+}
 read.tsv <- function(file, header = 1, sep = "\t", quote = "\"", dec = ".", fill = TRUE, comment.char = "", as.is = TRUE, ...) {
     read.csv(file, header, sep, quote, dec, fill, comment.char, as.is = as.is, ...)
 }
@@ -8504,13 +8501,17 @@ hs.hsgly <- local({
     function(wjm = {
     }, obj = {
     }, local = 0, ext = "R", wjj0 = wk.dm.wjj, env1 = .GlobalEnv, PO = 0, path.only = PO, blm.only = 0, load = 0, reload = 0, call = 0, argList = list(), rename = 0, bl = 1, parse.network = 0, less = 0, trim = 0, keep.mtime = 0, smart = 1, update.uid = !length(wjm)) {
+        uid <- hs.re(wjm, uid_end.pattern)
+        if ((!hs.machine.isLocal()) && (.libPaths() %=>% lapply(hs.wjj.ls, wjj = 1) %=>% unlist %=>% basename %=>% ("util.390816171110" %in% x))) {
+            uid %<=>% hs.gsub("[^0-9]", "_")
+            return(eval(call("::", "util.390816171110", uid)))
+        }
         if (length(obj)) 
             return(uid.obj(wjm, obj))
         if (update.uid) {
             uid.wj.wj.hs()
             return()
         }
-        uid <- hs.re(wjm, uid_end.pattern)
         wj <- do.find.wj(uid)
         if (!length(wj)) 
             stop(hs.p("####", wjm, "is not found. 34.07.04.195822 @ ", hs.home.expand("~/org/dm/r/xm.r"), " ####"))
@@ -14256,3 +14257,1017 @@ wk.bigz <- function(n1) {
     gmp::as.bigz(10)^n1
 }
 hs.median_i <- function(x) which.min(abs(x - median(x)))
+"37_12_08_170744" <- local({
+    conda_wjj <- c("~/miniconda3", "~/rj/miniconda3", "/opt/biosoft/anaconda3") %=>% 
+        x[file.exists(x)][1]
+    if (!length(conda_wjj)) 
+        hs.browser("37.12.08.171804")
+    bin_wjj <- hs.wjj(hs.home.expand("~/.local/bin"))
+    in_cran <- c("factoextra", "ggpubr", "readxl", "tidyverse", 
+        "survival", "gt", "broom", "gtsummary", "rsample", "labelled", 
+        "ggextra", "rjson", "stringdist", "venndiagram", "pheatmap", 
+        "iotools", "ade4", "ggdendro", "ggvenn", "ggVennDiagram", 
+        "sf") %=>% tolower
+    in_bioconductor <- c("clusterprofiler", "org.hs.eg.db", "enrichplot", 
+        "ggtree")
+    in_bioconda <- c("sambamba", "velocyto.r", "dropest")
+    others <- c("synapseclient", "awscli")
+    better_using_install_packages <- "GenomeInfoDbData"
+    function(pkg = {
+    }, r_pkg = {
+    }, conda_env = "wk", bin = pkg, cmd = "install") {
+        conda <- hs.fp(conda_wjj, "bin/conda")
+        if (!dir.exists(hs.fp(conda_wjj, "envs", conda_env))) 
+            .wk(conda, "create -n", conda_env)
+        switch(cmd, install = {
+            {
+                if (!length(r_pkg)) {
+                  installed <- hs.fp(conda_wjj, "envs", conda_env, 
+                    "lib/R/library") %=>% hs.wjj.ls(wjj = 1, 
+                    F = 0) %=>% tolower
+                  r_pkg <- c(in_cran, in_bioconductor) %not% 
+                    installed
+                }
+                if (length(r_pkg)) r_pkg %<=>% tolower
+                if (!length(pkg)) {
+                  if (length(r_pkg)) {
+                    pkg <- rep("", length(r_pkg))
+                    i <- r_pkg %in% c(in_cran, in_bioconda)
+                    if (any(i)) pkg <- r_pkg[i] %=>% paste0("r-", 
+                      x)
+                    i <- r_pkg %in% in_bioconductor
+                    if (any(i)) pkg <- r_pkg[i] %=>% paste0("bioconductor-", 
+                      x)
+                    if ("" %in% pkg) {
+                      r_pkg[pkg %in% ""]
+                    }
+                  }
+                }
+            }
+            if (!length(pkg)) pkg <- in_bioconda %or% others
+            .wk(conda, cmd, conda_env %=>% if (length(x) && nzchar(x)) c("-n", 
+                x), "-c conda-forge", "-c bioconda", pkg)
+        }, update = {
+            .wk(conda, "update -n base -c conda-forge conda")
+        }, hs.browser("37.12.08.172029"))
+    }
+})
+"38_10_08_222950" <- function(..mem = 1) {
+    .wk("conda info", intern = 1) %>% hs.grepV("envs directories") %>% 
+        strsplit(":") %>% {
+        .[[1]][2] %>% trim %>% dirname
+    }
+}
+"2023_07_06_121233" <- function(wjj = ".") {
+    hs.with_wd(wjj, .wk("R --vanilla CMD INSTALL -l ~/rj/lib/R/ ./"))
+}
+"38_11_30_134231" <- function(wj1) {
+    wk.fread(text = .sys.cat.text(wj1) %>% .wk("| head", intern = 1))
+}
+"36_07_24_094159" <- function(wj, sj = {
+}, ri = {
+}, ci = {
+}, cn = {
+}, ri.cn, ri.v, name = "subset", jg_wj = hs.wjm(wj, append = paste0(".", 
+    name), ext = "tsv.gz", dn = hs.wjj(dirname(wj), "jg")), extN = hs.hsgly("后缀.36.07.24.100015")(wj, 
+    "n"), ow = 0) {
+    if (ow) 
+        hs.wj.rm(jg_wj)
+    if (!file.exists(jg_wj)) {
+        if (is.null(sj)) 
+            sj <- wk.fread(wj)
+        if (!length(ri)) {
+            if (length(ri.cn) == 1) 
+                ri.v <- list(ri.v)
+            ri <- lapply(seq_along(ri.cn), function(ci1) {
+                cn1 <- ri.cn[ci1]
+                v1 <- ri.v[[ci1]]
+                wk.dt.subset(sj, v1, cn1, out = "i")
+            })
+            ri <- unique(unlist(ri))
+        }
+        if (!length(ci)) {
+            ci <- if (length(cn)) {
+                names(sj) %>% {
+                  i1 <- which(. %in% cn)
+                  unlist(tapply(i1, .[i1], list)[cn])
+                }
+            }
+            else seq.int(length(sj))
+        }
+        wk.dt.fwrite(sj[ri, .SD, .SDcols = c(ci)], jg_wj)
+    }
+    jg_wj
+}
+"38_11_29_171547" <- function(dt1) {
+    wk.dt.setnames(dt1, unlist(dt1[1]))
+    dt1[-1]
+}
+"39_05_14_113348" <- function(n, an = c(letters, LETTERS, seq(0, 
+    9)), b = {
+}, n2 = min(length(b), 5)) {
+    n1 <- n - n2
+    cat(paste(hs.sample(c(hs.sample(an, n1), hs.sample(b, n2))), 
+        collapse = ""), sep = "\n")
+}
+"38_12_17_000138" <- function(n = 1, ssh = "fwq.tsj", ...) {
+    hs.hsgly("rsync到台式机.38_12_16_235921")(n = n, ssh = ssh, 
+        fx = "in", ...)
+}
+"38_12_16_235921" <- function(n = 1, ssh = "qg", fx = "out", 
+    in2 = 0, wjj2do = c("~/wk", "~/db", if (fx == "out") "~/d/rjk"), 
+    wjj2 = "/media/kai/adata2t/db/备份/用Rsync/wk/同步的", 
+    wjj_bf = {
+    }) {
+    if (length(hs.clean(ssh)) && hs.grepl(ssh, "mbp\\d+")) 
+        wjj2do %<=>% {
+            c(x, c("~/Library/Containers/com.tencent.xinWeChat", 
+                "~/Library/Containers/com.apple.Safari")) %=>% 
+                x[file.exists(x)]
+        }
+    wjj2do %<=>% hs.sub("/*$", "/")
+    if (0) {
+        wjj_special <- if (Sys.info()["nodename"] == "calvin_mpb") 
+            c("~/wk/db/书", "~/wk/wk/wd/小说", "~/wk/wk/wd/音乐", 
+                "~/wk/wk/wd/图片", "~/wk/rjk/tb", "~/wk/wk/wd/db/mf/ff/ztr")
+        wjj_special %=>% if (length(x) && any(hs.grepl(x, " "))) 
+            hs.browser("39.04.20.222618", debug = 0)
+    }
+    additional <- c(if (n) "-n", "-f", .q("- .DS_Store"), "-kK", 
+        "--safe-links")
+    hs1 <- hs.cond(!length(hs.clean(ssh)), wk.rsync, fx == "out", 
+        wk.rsync.out.same_place, fx == "in", wk.rsync.in.same_place)
+    if (fx == "out") {
+        if (!n) 
+            local({
+                wj1 <- "~/org/dm/r/org.r.gz"
+                wj2 <- "~/org/dm/r/org1.r.gz"
+                hs.wj.move(wj1, wj2)
+                on.exit(hs.wj.move(wj2, wj1))
+                .update()
+            })
+    }
+    if (length(hs.clean(ssh))) {
+        for (wjj1 in wjj2do) {
+            wjj1.bf <- {
+            }
+            if (wjj1 %in% "~/wk/") {
+                wjj1.bf <- wjj1 %=>% hs.sub("/*$", ".备份")
+                hs1(paste0(wjj1, "rjk/"), ssh = ssh, U = 0, del = 1, 
+                  additional = additional)
+                hs1(wjj1, ssh = ssh, U = 0, del = 1, additional = additional, 
+                  bf_wjj0 = wjj1.bf)
+            }
+            else hs1(wjj1, ssh = ssh, U = 0, del = 1, additional = additional, 
+                bf_wjj0 = wjj1.bf)
+        }
+    }
+    else {
+        hs.browser("2023.07.14.195516", debug = 0)
+        if (length(wjj2do) != 1) 
+            hs.browser("39.05.17.094537", debug = 0)
+        if (!dir.exists(wjj_bf)) 
+            hs.browser("39.05.17.092431", debug = 0)
+        wk.rsync(wjj2do, wjj2 %=>% hs.sub("/*$", "/"), ssh = ssh, 
+            U = 0, del = 1, additional = additional, bf_wjj0 = wjj_bf)
+    }
+}
+"38_01_27_154027" <- function(wjj1, wjj2 = ".", ext = "pdf,png,xls,xlsx,tsv.gz,org,htm,html", 
+    del = 0, L = 1, n = 1, ssh = {
+    }) {
+    a <- tolower(ext) %>% strsplit(",") %>% unlist %>% unique %>% 
+        strsplit("") %>% sapply(. %>% {
+        a <- sapply(., . %>% {
+            a <- . %or% toupper(.)
+            if (length(a) > 1) 
+                a <- c("[", a, "]")
+            paste(a, collapse = "")
+        })
+        paste(c("+ *.", a), collapse = "")
+    })
+    cmd1 <- .sys(wj_rsync, "-ahPvz", if (n) 
+        "-n", if (L) 
+        "-L", if (del) 
+        "--del --delete", "-e ssh", "-f", .q("- .DS_Store"), 
+        paste("-f", .q(a)), "-f", .q("+ */"), "-f", .q("- **"), 
+        .sys.fpGood(wjj1), wjj2, "| grep -v", .q("/$"), "| grep -v", 
+        .q("^cannot delete non-empty directory"))
+    message(cmd1)
+    .wk(cmd1)
+}
+"39_05_07_212034" <- function(wjj2 = ".", remote = "r820") {
+    if (0) {
+        wk.fwrite(wj, wk.rsync.wj.wj)
+    }
+    wk.rsync.in.same_place(wk.rsync.wj.wj, ssh = remote)
+    wj <- wk.rsync.wj.wj %=>% readLines
+}
+"38_10_20_103018" <- function(fp1, data, ...) {
+    hs.switch(c(missing(data), hs.grepl(fp1, "(?i)\\.xlsx?$")), 
+        c(1, 0), wk.fread(fp1, ...), c(1, 1), wk.xls.read(fp1, 
+            ...), c(0, 0), wk.dt.fwrite(data, fp1, ...), c(0, 
+            1), wk.xls.write(data, fp1, ...))
+}
+"38_12_12_173550" <- function(M, wj2) {
+    hs.wj(wj2)
+    gz <- hs.grepl(wj2, "(?i)\\.gz$")
+    if (gz) {
+        fifo <- hs.wj.temp()
+        on.exit(hs.wj.rm(fifo), add = TRUE)
+        .wk("mkfifo", .sys.fpGood(fifo))
+        .wk("cat", .sys.fpGood(fifo), "| gzip >", .sys.fpGood(wj2), 
+            "&")
+        Matrix::writeMM(M, fifo)
+    }
+    else Matrix::writeMM(M, wj2)
+    wj2
+}
+"38_10_09_060215" <- function(wj = {
+}, wjj) {
+    if ((!missing(wjj)) && dir.exists(wjj)) 
+        wj <- hs.wjj.ls(wjj, "\\.tsv\\.gz$", R = 1)
+    for (i1 in seq_along(wj)) {
+        wj1 <- wj[i1]
+        wj2 <- hs.wjm(wj1, ext = "xls", extN = 2)
+        if (wj.update.reporter(wj2, wj1)) {
+            a <- readLines(wj1, 10)
+            wk.dt.fwrite(a, wj2)
+        }
+    }
+}
+"38_09_10_214239" <- function(v1 = {
+}, db.fp, ci1, ci2 = {
+}, head = 0, once = 0, consecutive = 0, ic = 0, wj2 = {
+}, cn = 0, what = "", ...) {
+    cmd1 <- if (length(v1)) {
+        paste0("while( <>) {\n  chomp;\n  $v{ ", if (ic) 
+            "lc( $_)"
+        else "$_", "} = 1;\n}\nopen( F1, ", .q(.sys.cat.skip(db.fp, 
+            cn = 0) %=>% paste("|")), ");", if (head) 
+            "\n$a = <F1>;\nprint( $a);", "\nwhile( <F1>) {", 
+            hs.switch(ci1, 1, "\n  /^[^\t]*/;\n  $f_ci1 = $&;", 
+                2, "\n  /\t([^\t]*)/;\n  $f_ci1 = $1;", .sys("\n  chomp;\n  @F = split( \"\t\");\n  $f_ci1 = $F[ ", 
+                  ci1 - 1, "];\n")), if (ic) 
+                "\n  $f_ci1 = lc( $f_ci1);", "\n  if( exists( $v{ $f_ci1})) {", 
+            if ((length(v1) == 1) && consecutive) 
+                "\n    $found = 1;", if (length(ci2)) {
+                paste0("\n    print( ", paste(paste0("$F[ ", 
+                  ci2 - 1, "]"), collapse = ", \"\t\", "), ", \"\n\");")
+            }
+            else paste0("print( $_", if (ci1 > 2) 
+                ", \"\n\"", ");"), if (once) 
+                "\n    delete( $v{ $f_ci1});\n    if( %v == 0) {\n      close( F1);\n      exit;\n    }", 
+            "\n  }", if ((length(v1) == 1) && consecutive) 
+                " else {\n    if( $found) {\n      close( F1);\n      exit();\n    }\n  }", 
+            "\n}\nclose( F1);")
+    }
+    else paste0("\nopen( F1, ", .q(.sys.cat.skip(db.fp, cn = 0) %=>% 
+        paste("|")), ");", if (length(ci2)) {
+        paste0("\n$\" = \"\t\";\nwhile( <F1>) {\n  chomp;\n  @F = split( \"\t\");\n  ", 
+            paste0("print( \"@F[(", paste(ci2 - 1, collapse = ", "), 
+                ")]\n\");"), "\n}")
+    }
+    else "while( <F1>) { print;}")
+    if (what == "cmd") 
+        return(cmd1)
+    message(cmd1)
+    hs.with_wd(db.fp, hs.hsgly("1.信息学/文件/读写/向量到perl到结果.38_09_26_203407")(v1, 
+        cmd1, wj2 = wj2, cn = cn, ...))
+}
+"38_09_26_203407" <- function(x, perl.cmd, wj2 = {
+}, reader = if (!length(wj2)) wk.fread, what = "", ...) {
+    force(reader)
+    if (length(x)) {
+        if (!length(wj2)) {
+            wj2 <- hs.wj.temp() %=>% paste0(".gz")
+            on.exit(hs.wj.rm(wj2), add = TRUE)
+        }
+        hs.msg(" ")
+        message(perl.cmd)
+        cat(x, sep = "\n", file = .sys("| perl -e", .q(perl.cmd), 
+            if (hs.grepl(wj2, "(?i)\\.gz$")) 
+                "| gzip", ">", .sys.fpGood(hs.wj(wj2))))
+        .sys("| perl -e", .q(perl.cmd), if (hs.grepl(wj2, "(?i)\\.gz$")) 
+            "| gzip", ">", .sys.fpGood(hs.wj(wj2))) %=>% message
+        hs.msg()
+        if (length(reader)) 
+            reader(wj2, ...)
+        else wj2
+    }
+    else {
+        cmd <- .sys("perl -e", .q(perl.cmd))
+        if (length(reader)) {
+            if (identical(reader, wk.fread)) {
+                wk.fread(cmd = cmd, ...)
+            }
+            else hs.browser("39.03.02.233503", debug = 0)
+        }
+        else {
+            .wk(cmd, if (hs.grepl(wj2, "(?i)\\.gz$")) 
+                "| gzip", ">", .sys.fpGood(hs.wj(wj2)))
+            wj2
+        }
+    }
+}
+"38_12_07_172444" <- function(h5fp, i = {
+}) {
+    if (is(h5fp, "H5D")) 
+        return(if (length(i)) h5fp[i] else h5fp[])
+    if (is(h5fp, "H5Group")) {
+        if (!setequal(names(h5fp), c("categories", "codes"))) 
+            hs.browser("38.11.18.112335")
+        jg <- factor(if (length(i)) 
+            h5fp[["codes"]][i]
+        else h5fp[["codes"]][])
+        na_i <- match("-1", levels(jg), nomatch = 0)
+        if (na_i) 
+            levels(jg)[na_i] <- NA
+        non_na_i <- which(!is.na(levels(jg)))
+        if (length(non_na_i)) 
+            levels(jg)[non_na_i] <- h5fp[["categories"]][as.numeric(levels(jg)[non_na_i]) + 
+                1]
+        return(jg)
+    }
+    hs.browser("38.11.18.112139", debug = 0)
+}
+"36_11_09_121255" <- function(wj_in, wj_out = "~/tmp/tmp.pdf") {
+    .wk("pdftk", .q(normalizePath(wj_in)), "cat output", .q(normalizePath(wj_out)))
+}
+"36_11_04_211749" <- function(wj) {
+    tmp_wj <- hs.wj.temp()
+    on.exit(hs.wj.rm(tmp_wj), add = TRUE)
+    .wk("pdftk", .sys.fpGood(wj), "cat 2-end output", tmp_wj)
+    hs.wj.move(tmp_wj, wj)
+}
+"39_01_27_222335" <- local({
+    createFonts <- function(wb) {
+        list(data = xlsx::Font(wb, heightInPoints = 11, name = "Arial"), 
+            title = xlsx::Font(wb, heightInPoints = 16, name = "Arial", 
+                isBold = TRUE), subtitle = xlsx::Font(wb, heightInPoints = 13, 
+                name = "Arial", isBold = FALSE, isItalic = TRUE))
+    }
+    createFill <- function(color) {
+        xlsx::Fill(color, color, "SOLID_FOREGROUND")
+    }
+    flag <- 1
+    align <- dataFormatDate <- dataFormatNumberD <- {
+    }
+    function(tbl, cell2fill = {
+    }, sheetName = "sheet 1", wj2 = "~/tmp/a.xlsx", fill = "#cc0000") {
+        if (flag) {
+            align <<- hs.lapply("left,right,center", . %=>% {
+                xlsx::Alignment(horizontal = paste0("ALIGN_", 
+                  toupper(x)), vertical = "VERTICAL_CENTER", 
+                  wrapText = TRUE)
+            })
+            dataFormatDate <<- xlsx::DataFormat("yyyy/m/d")
+            dataFormatNumberD <<- xlsx::DataFormat("0.0")
+            flag <<- 0
+        }
+        wb <- xlsx::createWorkbook()
+        sh <- xlsx::createSheet(wb, sheetName)
+        f <- createFonts(wb)
+        cslist <- lapply(1:ncol(tbl), function(x) {
+            xlsx::CellStyle(wb) + f$data + alignRight + dataFormatNumberD
+        })
+        ri <- 1
+        ci <- 1
+        Fill1 <- createFill(fill)
+        (xlsx::addDataFrame)(tbl, sh, col.names = TRUE, row.names = FALSE, 
+            startRow = ri, startColumn = ci, colStyle = hs.c(1:ncol(tbl), 
+                cslist))
+        if (length(cell2fill)) {
+            apply(cell2fill, 1, . %=>% {
+                ri <- x[1] + 1
+                ci <- x[2]
+                (xlsx::addDataFrame)(tbl[ri, ci], sh, col.names = FALSE, 
+                  row.names = FALSE, startRow = ri, startColumn = ci, 
+                  colStyle = hs.c(1, lapply(cslist, . %=>% {
+                    x + Fill1
+                  })), )
+                invisible()
+            })
+        }
+        if (length(wj2)) {
+            xlsx::saveWorkbook(wb, wj2)
+            wj2
+        }
+        else wb
+    }
+})
+"37_04_29_185838" <- function(dz0, wjj2 = hs.fp(wjj0, hs.re(dz0, 
+    "ftp\\..*")), what = {
+}, wjj0, co1 = wj.update.reporter.co1) {
+    co1 <- wj.update.reporter.co1
+    if (length(what)) {
+        dz1 <- hs.fp(dz0, what)
+        wj2 <- hs.fp(wjj2, what)
+        if (!hs.wj.exists(wj2, size = 9)) 
+            hs.wj.rm(wj2)
+        wj.updater(wj2, dz1, co1 = co1)
+    }
+    else {
+        wj2 <- hs.fp(wjj2, "ftp_files.37_04_29_165233.txt.gz")
+        if (wj.update.reporter(wj2)) {
+            a1 <- readLines(paste0("http://", dz0))
+            ftp_files <- hs.re(a1, "(?<=^<a href=\")[^\"]*")
+            wk.dt.fwrite(list(ftp_files), wj2)
+        }
+        note.update_time(wj2)
+        message("[37_04_29_165055]files in ", dz0, ":")
+        readLines(wj2)
+    }
+}
+"2023_06_26_120607" <- function(dz, wjj2 = ".", wjm = {
+}, j = 5, gz = 1, win = 0) {
+    if (hs.grepl(dz, "^(?i)ftp://")) 
+        dz %<=>% hs.re("(?i)ftp", "https")
+    if (win) {
+        .sys(.qq("D:\\db\\软件\\exe\\aria2-1.36.0-win-64bit-build1\\aria2c.exe"), 
+            "--all-proxy=127.0.0.1:7890", "--file-allocation=none", 
+            "-c -R", dz) %=>% message
+        return()
+    }
+    if (length(wjj2) != 1) 
+        hs.browser("2023.06.26.120829", debug = 0)
+    if (gz) {
+        wjj2_temp <- hs.wj.temp()
+        on.exit(hs.wj.rm(wjj2_temp, recursive = 1), add = TRUE)
+        wjj2_temp %=>% hs.wjj %=>% hs.with_wd({
+            for (dz1 in dz) .wk("aria2c --file-allocation=falloc -c -R -j", 
+                j, dz1)
+        })
+        hs.hsgly("文件/找/压缩/值得压缩的.2023_08_10_015150") %=>% 
+            x(wjj2_temp) %=>% for (wj1 in x) hs.with_wd(wj1, 
+            .wk("gzip", .q(basename(wj1))))
+        wjj2_temp %=>% .ls
+        .wk("mv", hs.fp(hs.fpGood(wjj2_temp), "*"), hs.fpGood(wjj2))
+    }
+    else wjj2 %=>% hs.wjj %=>% hs.with_wd({
+        for (i in seq_along(dz)) .wk("aria2c --file-allocation=falloc -c -R -j", 
+            j, dz[i])
+    })
+}
+"38_10_04_161056" <- function(dz1, wj2, wjj2, gz = !hs.grepl(wj2, 
+    "(?i)\\.gz$")) {
+    if (missing(wj2)) 
+        wj2 <- basename(dz1)
+    if (gz) 
+        wj2 %<=>% paste0(".gz")
+    if (!missing(wjj2)) 
+        wj2 <- hs.fp(wjj2, wj2)
+    if (!file.exists(wj2)) 
+        .wk("wget -O -", .q(dz1), if (gz) 
+            "| gzip", ">", .sys.fpGood(wj2))
+    normalizePath(wj2)
+}
+"38_07_07_093129" <- function(wjj1, wjj_all = {
+}, wj_all = {
+}, wj2 = {
+}) {
+    a <- hs.with_wd(wjj1, {
+        if (length(wj2)) {
+            if (inherits(wj2, "function")) {
+                wj2 <- wj2()
+            }
+        }
+        else wj2 <- hs.fp("..", .q(paste0(basename(wjj1), ".zip")))
+        hs.update(wj2, paste0(x, ".zip"), !hs.grepl(x, "(?i)\\.zip$"))
+        cat.file <- .sys("| zip -ru -@", wj2)
+        if (inherits(wjj_all, "function")) 
+            wjj_all <- wjj_all()
+        for (a in wjj_all) if (file.exists(a)) 
+            hs.wjj.ls(a, R = 1) %>% cat(sep = "\n", file = cat.file)
+        if (length(wj_all)) {
+            cat(wj_all, sep = "\n", file = cat.file)
+        }
+        else hs.for(a, hs.wjj.ls(wjj = 1, F = 0) %not% wjj_all, 
+            hs.wjj.ls(a, "(?i)\\.(png|pdf|xls|xlsx|tsv\\.gz)$", 
+                R = 1) %=>% cat(sep = "\n", file = cat.file))
+        .wk("realpath", wj2, intern = 1)
+    })
+    message(a)
+}
+"2023_07_26_150436" <- function(root, sub) {
+    sub %=>% hs.hsgly("文件夹/打包/38_07_07_093129")(root, 
+        wj_all = hs.wjj.ls(x, wj = 1, wjj = 1), wj2 = hs.gsub(x, 
+            "/", "."))
+}
+"38_11_27_005936" <- function(uid1) {
+    hs.hsgly()
+    uid1 <- hs.re(basename(uid1), wk.muid.pattern)
+    wjj0 <- hs.hsgly(uid1, PO = 1) %>% dirname %>% normalizePath
+    wjj1 <- wjj0
+    repeat {
+        wj1 <- hs.wjj.ls(wjj1, paste0("(?i)文件夹\\.", wk.muid.pattern, 
+            "\\.r(.gz)?$"))
+        if (length(wj1) == 1) 
+            break
+        if (length(wj1) > 1) 
+            stop("[38_11_27_001548]")
+        wjj1 <- dirname(wjj1)
+    }
+    wjj2 <- wjj0_jg <- hs.hsgly(hs.re(basename(wj1), wk.muid.pattern))()
+    if (nchar(wjj0) > nchar(wjj1)) {
+        wjj2 <- paste0(wjj0_jg, substring(wjj0, nchar(wjj1) + 
+            1))
+    }
+    wj_flag <- hs.fp(wjj2, paste0("代码号_", uid1))
+    if ((!hs.machine.isLocal()) && (!file.exists(wj_flag))) 
+        local({
+            a <- hs.wjj.ls(wjj0_jg, uid1, R = 1)
+            hs.switch(length(a), 1, {
+                wjj_old <- dirname(a)
+                if (dir.exists(wjj2)) {
+                  hs.browser("38.11.27.233122", debug = 0)
+                  for (wj1 in hs.wjj.ls(wjj_old, A = 1, wjj = 1, 
+                    wj = 1)) hs.wj.move(wj1, wjj2)
+                  hs.wj.rm(wjj_old, 1)
+                }
+                else hs.wj.move(wjj_old, hs.wj(wjj2))
+                if (dir.exists(wjj_old)) 
+                  hs.browser("38.11.27.144937", debug = 0)
+            }, 0, {
+                cat("", file = hs.wj(wj_flag))
+            }, hs.browser("38.11.27.083724", debug = 0))
+        })
+    wjj2
+}
+"2023_07_11_095839" <- function(wjj1, wjj2) {
+    wj <- hs.wjj.ls(wjj1, A = 1)
+    wj2 <- hs.fp(wjj2, basename(wj))
+    i <- !file.exists(wj2)
+    wj <- wj[i]
+    wj2 <- wj2[i]
+    if (!file.rename(wj, wj2)[1]) {
+        file.copy(wj, wjj2, copy.date = TRUE)
+    }
+}
+"2023_07_11_101608" <- function(wjj1, wjj2) {
+    wj <- hs.wjj.ls(wjj1, wjj = 1, A = 1)
+    hs.browser("2023.07.11.101800", debug = 0)
+    wj2 <- hs.fp(wjj2, basename(wj))
+    i <- !file.exists(wj2)
+    wj <- wj[i]
+    file.copy(wj, wjj2, recursive = TRUE, copy.date = TRUE)
+}
+"2023_07_11_102948" <- function(wjj1, exclude = {
+}) {
+    wj <- hs.wjj.ls(wjj1, A = 1, wj = 1, wjj = 1, F = 0)
+    if (length(exclude)) 
+        wj %<=>% x[x %not.in% exclude]
+    a <- hs.with_wd(wjj1, {
+        a <- lapply(seq_along(wj), function(i) {
+            wj1 <- wj[i]
+            if (dir.exists(wj1)) {
+                a <- hs.wjj.ls(wj1, A = 1, R = 1)
+                if (length(a)) {
+                  a
+                }
+                else {
+                  wj1
+                }
+            }
+            else wj1
+        })
+    })
+    hs.fp(wjj1, unlist(a))
+}
+"2023_07_11_101012" <- function(wjj1, wjj2) {
+    hs.browser("2023.07.11.101116", debug = 0)
+    wj <- hs.wjj.ls(wjj1, wjj = 1, wj = 0)
+    i <- !file.exists(hs.fp(wjj2, basename(wj)))
+    wj <- wj[i]
+    file.symlink(wj, wjj2)
+}
+"2023_06_21_152354" <- function(wjj) {
+    hs.with_wd(wjj, {
+        while (1) {
+            wj <- .wk("find -type d -empty", intern = 1)
+            if (!length(wj)) 
+                break
+            hs.wj.rm(wj, 1)
+        }
+    })
+}
+"2023_07_11_094726" <- function(wjj1, wjj2) {
+    wj <- hs.wjj.ls(wjj1, wjj = 1, wj = 0)
+    for (i in seq_along(wj)) {
+        wj1 <- wj[i]
+        wj2 <- hs.wjm(wj1, dn = wjj2)
+        if (file.exists(wj2)) 
+            next
+        if (!file.rename(wj1, wj2)) {
+            wk.rsync(wj1, wjj2 %=>% hs.sub("/*$", "/"))
+        }
+        if (file.exists(wj1)) 
+            hs.wj.rm(wj1, 1)
+    }
+}
+"37_12_08_111112" <- local({
+    hs1 <- function(gz1) {
+        wj2 <- paste0(gz1, ".is_ok")
+        if (wj.update.reporter(wj2, gz1)) {
+            a1 <- .wk("gzip -t 2>&1", gz1, intern = 1)
+            cat(length(a1) == 0, file = wj2)
+        }
+        as.logical(readLines(wj2))
+    }
+    function(gz) {
+        wk.mclapply(gz, hs1, mc.cores = 4) %>% unlist
+    }
+})
+"38_05_13_124417" <- function(wj) {
+    if (dir.exists(wj)) 
+        wj <- hs.wjj.ls(wj, "(?i)(md5(sum)?\\.txt|\\.md5)$", 
+            R = 1)
+    wk.mclapply(wj, . %=>% {
+        hs.with_wd(x, readLines(x) %=>% cat(sep = "\n", file = .sys("| md5sum -c -")))
+    }, mc.cores = 4)
+}
+"38_07_14_100544" <- function(wj1, ot = "t", wjj = 0, intern = ot != 
+    "t", named = 1) {
+    ext1 <- tolower(hs.re(wj1, "[^\\.]+$"))
+    hs.with_wd(wj1, {
+        wj1 <- basename(wj1)
+        hs.cond(hs.grepl(wj1, "(?i)\\.(tar(\\.gz)?|tgz)$"), {
+            Z <- hs.grepl(wj1, "(?i)z$")
+            hs.switch(ot, "v", {
+                info <- .wk("tar -tf", .q(wj1), if (Z) 
+                  "-z", intern = 1)
+                jg <- hs.grepV(info, "/$", inv = 1)
+                if (named) 
+                  jg %<=>% hs.hsgly("1.信息学/文件/名/带名称.38_12_12_185553")(x)
+                jg
+            }, "t", .wk("tar -tf", .q(wj1), if (Z) 
+                "-z", intern = intern))
+        }, hs.grepl(wj1, "(?i)\\.zip$"), hs.switch(ot, "v", {
+            info <- .wk("unzip -l", .q(wj1), intern = 1)
+            ci1 <- regexpr("-+$", info[3])
+            info %<=>% x[seq(4, length(x) - 2)]
+            jg <- substring(info, ci1)
+            if (named) 
+                jg %<=>% hs.hsgly("1.信息学/文件/名/带名称.38_12_12_185553")(x)
+            jg
+        }, "t", .wk("unzip -l", .q(wj1), intern = intern)), hs.grepl(wj1, 
+            "(?i)\\.7z$"), hs.switch(ot, "v", {
+            info <- .wk("7z l", .q(wj1), intern = 1)
+            i <- hs.grep(info, "^[- ]*$")
+            info <- info[seq(i[length(i) - 1] - 1, tail(i, 1) - 
+                1)]
+            ci1 <- regexpr("-+$", info[2])
+            jg <- substring(tail(info, -2), ci1)
+            if (!wjj) 
+                jg <- jg %not% dirname(jg)
+            if (named) 
+                jg %<=>% hs.hsgly("1.信息学/文件/名/带名称.38_12_12_185553")(x)
+            jg
+        }, "t", .wk("7z l", .q(wj1), intern = intern)), hs.browser("38.07.14.101031"))
+    })
+}
+"38_09_30_141844" <- function(f1, l = 1, l.head = 9, d = dirname(f1), 
+    d.use.self.name = 1, t = 0) {
+    if (t) {
+        ext1 <- hs.re(f1, "(?i)(?<=.)[gx]z$")
+        a <- .wk(hs.switch(ext1, "zip", "unzip -t", "gz", "gzip -t"), 
+            .sys.fpGood(f1))
+        return(a)
+    }
+    ext1 <- hs.re(f1, "(?i)(?<=.)(tar(\\.(gz|xz|bz2))?|tgz)$")
+    if (length(ext1)) {
+        tar.p <- local({
+            a <- c("t", "x")
+            b <- paste0("-", a, switch(hs.file.extension(ext1), 
+                tgz = , gz = "z", xz = "J", bz2 = "j"), "vf")
+            names(b) <- a
+            b
+        })
+        if (l) {
+            a <- .wk("tar", tar.p["t"], hs.fpGood(f1), "|", .sys.head(1000), 
+                intern = 1)
+            if (length(a) > l.head) 
+                a <- c(head(a, 4), "...", tail(a, 4))
+            cat(a, sep = "\n")
+        }
+        else {
+            extN <- hs.strsplit.v(ext1, sep = "\\.") %=>% hs.clean(ot = "n")
+            wjj.out <- hs.wjm(f1, dn = d, ext = 0, extN = extN)
+            if (!file.exists(wjj.out)) {
+                wjj.tmp <- hs.wj.temp(tmpdir = dirname(f1))
+                .wk("tar", "-k", tar.p["x"], hs.fpGood(f1), "-C", 
+                  hs.fpGood(hs.wjj(wjj.tmp)))
+                wjj <- hs.wjj.ls(wjj.tmp, wjj = 1, F = 0)
+                if (wjj %=>% {
+                  (length(x) == 1) && (x == basename(f1))
+                }) {
+                  hs.wj.move(hs.fp(wjj.tmp, wjj), d)
+                  unlink(wjj.tmp, 1)
+                }
+                else hs.wj.move(wjj.tmp, wjj.out)
+            }
+            return(wjj.out)
+        }
+    }
+    if (hs.grepl(f1, "(?i)\\.tar\\.xz$")) {
+        if (l) {
+            .wk("xzcat", .sys.fpGood(f1), "| tar", "-tf -", "| head")
+        }
+        else {
+            if (d.use.self.name) 
+                d <- wk.wjj(hs.wjm(f1, dn = d, ext = 0, extN = 2))
+            .wk("xzcat", .sys.fpGood(f1), "| tar", "-xf -", "-C", 
+                .sys.fpGood(d))
+        }
+        return(d)
+    }
+    if (hs.grepl(f1, "(?i)\\.zip$")) {
+        bin <- "unzip"
+        if (!length(d.use.self.name)) {
+            if (0) {
+                fc.0 <- .sys.do("unzip", "-l", .sys.fpGood(f1), 
+                  intern = 1)
+                fc <- {
+                  i <- grep("^-", fc.0)
+                  substring(fc.0[seq(i[1] + 1, i[2] - 1)], regexpr("Name", 
+                    fc.0[2]))
+                }
+            }
+            fc.0 <- .wk(bin, "-l", wk.wjlj(f1), "| gawk", .q("{ print $4}"), 
+                intern = 1)
+            fc <- {
+                i <- grep("^-", fc.0)
+                tail(fc.0, -i) %rm% ""
+            }
+            d.use.self.name <- as.integer(substring(fc[1], nchar(fc[1])) != 
+                "/" || length(table(sapply(fc, ieiwk.dirname.1))) > 
+                1)
+        }
+        if (l) {
+            .wk(bin, "-O CP936", "-l", .sys.fpGood(f1), "|", 
+                .sys.head(l.head))
+        }
+        else {
+            if (d.use.self.name) 
+                d <- hs.wj(hs.wjm(f1, ext = 0, dn = d))
+            if (file.exists(d)) {
+                message("[target folder already exists]", f1)
+                return(f1)
+            }
+            .wk(bin, "-O CP936", "-d", .sys.fpGood(d), .sys.fpGood(f1))
+        }
+        return()
+    }
+    if (wk.re(f1, "\\.gz$", "detect")) {
+        bin <- "pigz"
+        if (l) {
+            .wk("gzip", "-l", wk.wjlj(f1), "|", .sys.head(l.head))
+        }
+        else {
+            .wk(bin, "-dc", wk.wjlj(f1), ">", wk.wjlj(hs.wjm(f1, 
+                ext = 0, dn = d)))
+        }
+        return(ieiwk.filename(f1))
+    }
+    if (hs.grepl(f1, "\\.7z$")) {
+        bin <- "7z"
+        if (l) {
+            .wk(bin, "l", f1)
+        }
+        else {
+            if (!length(d.use.self.name)) {
+                browser("33.06.15.224151")
+            }
+            if (d.use.self.name) 
+                d <- dirname(f1)
+            .wk(bin, "x", "-aos -y", paste0("-o", hs.fpGood(d)), 
+                hs.fpGood(f1))
+            return(hs.wjm(f1, ext = 0))
+        }
+    }
+    if (wk.re(f1, "\\.rar$", "detect")) {
+        bin <- "unrar"
+        if (l) {
+            .wk(bin, "v", f1, "|", .sys.head())
+        }
+        else {
+            wjj2 <- hs.wjm(f1, ext = 0)
+            .wk(bin, "x -u", .sys.fpGood(f1), .sys.fpGood(hs.wjj(wjj2)))
+            return(f1)
+        }
+    }
+}
+"38_07_14_102931" <- function(wj_compressed, wj_in = {
+}, wj_to = if (!temp) "-", wjj_to = if (temp) hs.wj.temp() else hs.wjm(wj_compressed, 
+    ext = 0), ot = if (temp) "fp" else "cmd", temp = 0) {
+    if ((wj_to != "-") && (!hs.grepl(wj_compressed, "(?i)\\.zip$"))) 
+        hs.browser("38.07.14.103605")
+    cmd1 <- hs.cond(hs.grepl(wj_compressed, "(?i)\\.zip$"), {
+        hs.switch(wj_to, "-", .sys("unzip -p", .q(normalizePath(wj_compressed)), 
+            .q(wj_in)), .sys("unzip", "-d", hs.fpGood(hs.wjj(wjj_to)), 
+            hs.fpGood(wj_compressed), .q(wj_in)))
+    }, hs.grepl(wj_compressed, "(?i)\\.7z$"), {
+        .sys("7z e", if (wj_to == "-") 
+            "-so", .sys.fpGood(wj_compressed), .sys.fpGood(wj_in))
+    }, hs.grepl(wj_compressed, "(?i)\\.(tar(\\.gz)?|tgz)$"), 
+        {
+            Z <- hs.grepl(wj_compressed, "(?i)z$")
+            .sys("tar", if (wj_to == "-") 
+                c("-O", if (osType() == "Darwin") "-q"), "-xvf", 
+                .sys.fpGood(wj_compressed), if (Z) 
+                  "-z", .sys.fpGood(wj_in))
+        }, hs.browser("38_08_02_143117"))
+    hs.switch(ot, "cmd", cmd1, "fp", {
+        .wk(cmd1)
+        hs.fp(wjj_to, wj_in)
+    }, "dt", wk.fread(cmd = cmd1), "less", .wk(cmd1, "| less -Ni"))
+}
+"38_12_12_185553" <- function(wj) {
+    hs.c(hs.wjm(wj, dn = 0, ext = 0), wj)
+}
+"39_05_12_131245" <- function(wj) {
+    a <- strsplit(wj, "/")
+    len_common <- local({
+        for (i1 in hs.seqForward(1, min(sapply(a, length)))) {
+            if (sapply(a, "[", i1) %=>% {
+                uniqueN(x) > 1
+            }) {
+                return(i1 - 1)
+            }
+        }
+        return(i1)
+    })
+    jg <- list(common = a[[1]] %=>% head(len_common) %=>% as.list %=>% 
+        do.call(hs.fp, x), private = sapply(a, . %=>% {
+        tail(x, -len_common) %=>% do.call(hs.fp, as.list(x))
+    }))
+    return(jg)
+    common_parent <- {
+    }
+    repeat {
+        a1 <- sapply(a, "[", 1)
+        if (anyNA(a1) || (uniqueN(a1) > 1)) {
+            break
+        }
+        else {
+            common_parent %<=>% c(a[[1]][1])
+            a <- lapply(a, "[", -1)
+        }
+    }
+    list(common = common_parent %=>% do.call(hs.fp, as.list(x)), 
+        private = sapply(a, . %=>% do.call(hs.fp, as.list(x))))
+}
+"36_07_24_100015" <- function(wj, ot = "ext") {
+    ext <- hs.re(wj, "(?i)(?<=\\.)(tsv|csv|txt|xlsx?|tar|tgz|zip|rar|xlsx|gz|xz)(\\.(tar|tgz|zip|rar|xlsx|gz|xz))?$")
+    hs.switch(ot, "ext", ext, "n", sapply(hs.gre(ext, "\\.+"), 
+        length), "wjm", hs.sub(wj, paste0(".", ext)))
+}
+"2023_06_21_152044" <- function(wjj) {
+    hs.with_wd(wjj, {
+        .wk("chmod -R go+rx .")
+        .wk("chmod -R go-w .")
+    })
+}
+"38_01_21_131617" <- function(rp = all, bash = all, all = 0, 
+    wj2exclude = c("/工作/个人/", "/工作/文献/信息", 
+        "/工作/单位.其它/", "/资源", "/记忆", "/工作室", 
+        "/常见任务", "/emacs", "/jdi.r", "/dm/r/my.r") %not% 
+        wj_not_to_exclude, wj_not_to_exclude = hs.switch(to, 
+        "9y", c("/工作/个人/")), to = wk.ssh, wjj1 = "~/wk/", 
+    wjj2 = hs.fp(root, basename(wjj1)) %=>% paste0("/"), root = "~", 
+    bf_wjj0 = if (root == "~") "~/wk.备份") {
+    if (0) {
+        hs.browser("2023.06.21.145648", debug = 0)
+        wjj2 <- "/home/wk/14t1/wk/temp/code/"
+        wk.rsync.out("~/wk/", wjj2, ssh = to, ext = if (!all) 
+            c("r", "r.gz", "py", "py.gz", "py.zip", "sh", "json"), 
+            bf_wjj0 = bf_wjj0, additional = .sys(paste("-f", 
+                paste0("- ", wj2exclude, "*") %=>% .q)), included = "/1/org/dm/sh/rj/*", 
+            del = 1)
+        hs.hsgly("1.信息学/文件夹/删空文件夹/2023_06_21_152354")(wjj2)
+        hs.hsgly("1.信息学/文件/权限/别人只读/2023_06_21_152044")(wjj2)
+    }
+    if (!length(to)) 
+        return(hs.msg("2023_07_30_222628|没有指定目标服务器"))
+    wk.rsync.out(wjj1, wjj2, ssh = to, ext = if (!all) 
+        c("r", "r.gz", "py", "py.gz", "py.zip", "json", "sh", 
+            "rprofile"), bf_wjj0 = bf_wjj0, additional = .sys(paste("-f", 
+        paste0("- ", wj2exclude, "*") %=>% .q), "-m"), included = "/1/org/dm/sh/rj/*", 
+        del = 1)
+    if (rp) {
+        wk.rsync.out.same_place("~/.Rprofile", ssh = to, L = 1)
+    }
+    if (bash) {
+        wk.rsync.out(normalizePath("~/.bashrc.module"), "~/", 
+            ssh = to, p = 0)
+        wk.rsync.out(normalizePath("~/.bashrc.portable"), "~/", 
+            ssh = to, p = 0)
+        wk.rsync.out.same_place("~/.ssh/config", ssh = to, p = 0)
+    }
+}
+"2023_06_09_121941" <- function(wj) {
+    wj %=>% sapply(x, . %=>% .wk("du -s", hs.fpGood(x), intern = 1)) %=>% 
+        wk.fread(text = x, cn = 0)[, V1 %=>% sum] %=>% {
+        class(x) <- "object_size"
+        x
+    } %=>% format(units = "auto")
+}
+"38_12_11_174401" <- function(ms, wjj, ...) {
+    .wk("rg --sortr modified --color always -z", .q(ms), ..., 
+        .sys.fpGood(wjj), "| less -NirF")
+}
+"2023_08_10_015813" <- function() {
+    "(?i)\\.(zip|xz|[bt]?gz|bz2|[jr]ar|feather|epub|png|jpe?g)$"
+}
+"37_05_29_133955" <- function(wjj1 = ".", ot = "fp", z_pattern = hs.hsgly("不需要压缩的模式.2023_08_10_015813")()) {
+    switch(ot, fp = hs.wjj.ls(wjj1, z_pattern), glob = local({
+        hs.browser("2023.08.10.020846", debug = 0)
+        ext <- strsplit(tolower("gz,bgz,tgz,xz,7z,bz2,zip,rar"), 
+            ",")[[1]]
+        ext <- sapply(ext, . %=>% {
+            a1 <- strsplit(x, "")[[1]]
+            a2 <- sapply(a1, . %=>% {
+                if (x %in% letters) {
+                  paste0("[", x, toupper(x), "]")
+                } else x
+            })
+            paste(a2, collapse = "")
+        })
+        paste0("*.", ext)
+    }))
+}
+"2023_08_10_015150" <- function(wjj1 = ".", z_pattern = hs.hsgly("不需要压缩的模式.2023_08_10_015813")(), 
+    size_min = 4096) {
+    wj <- hs.wjj.ls(wjj1)
+    wj %=>% x[file.size(x) > size_min] %=>% hs.grepV(z_pattern, 
+        inv = 1)
+}
+"2023_06_29_124404" <- function(wjj, pattern) {
+    if (!file.exists(wjj)) 
+        return()
+    if (!dir.exists(wjj)) 
+        wjj <- hs.dirname(wjj)
+    while (1) {
+        wj <- hs.wjj.ls(wjj, pattern, F = 1)
+        if (length(wj)) 
+            return(wj)
+        a <- hs.dirname(wjj)
+        if (a == wjj) 
+            return()
+        wjj <- a
+    }
+}
+"39_01_08_150201" <- function(wj2 = hs.wj(hs.home.expand("~/.db/wk.txt.xz")), 
+    ot = "") {
+    if (ot == "wj") 
+        return(wj2)
+    bin1 <- hs.switch(osType(), "Darwin", "gfind", "find")
+    hs.msg("hs.hsgly( '文件/找/find.39_01_08_150201')")
+    hs.with_wd(hs.home.expand("~/wk"), .wk("cat <(", bin1, "-type d", 
+        "-empty | perl -e", .q("while( <>) { print( substr( $_, 1, -1), \"/\\n\");}"), 
+        ";", bin1, "-type f | perl -e", .q("while( <>) { print( substr( $_, 1));}"), 
+        ") | sort", "| perl -e", .q("\nwhile( <>) {\n  if( /\\.DS_Store\n$/) {\n    next;\n  }\n  if( /wk\\/wd\\/图片\\/pic\\/(b|美)/) {\n    next;\n  }\n  if( /\\/rjk\\/ln-s.个人\\/\\.mozilla(\\.bf)?/) {\n    next;\n  }\n  if( /\\/rjk\\/ztr\\/p\\//) {\n    next;\n  }\n  if( m{^/1/(org|xt)/}) {\n    print( \"~/$1/\", $');\n  } elsif ( m{^/(rjk|tmp)/}) {\n    print( \"~/$1/\", $');\n  } else {\n    print( \"~/wk\", $_);\n  }\n}\n"), 
+        "| xz -1 >", hs.fpGood(wj2)))
+    hs.msg()
+    wj2
+}
+"38_12_02_195318" <- function(update = 0, pat = readline(), ignore.case = 1, 
+    regex = 1, db.wjj = hs.wjj("~/.db", "mlocate"), wjj2do = c("~/wk", 
+        "~/in2", "~/f", "~/m") %>% {
+        .[dir.exists(.)]
+    }, intern = 0) {
+    db.wj <- wk.sapply(wjj2do, function(wjj1) {
+        hs.wj(db.wjj, ifelse(wjj1 == "~", "home", basename(wjj1)))
+    })
+    1
+    {
+        wjj1 <- names(db.wj)[1]
+        if (0) 
+            for (wjj1 in names(db.wj)) {
+                t1 <- file.mtime(db.wj[[wjj1]])
+                if (is.na(t1) || (difftime(Sys.time(), t1, units = "mins") > 
+                  100)) {
+                  update <- 1
+                  break
+                }
+            }
+        if (update) 
+            for (wjj1 in names(db.wj)) .wk("updatedb -l 0 -o", 
+                db.wj[[wjj1]], "-U", wjj1)
+    }
+    1
+    {
+        r1 <- .wk("locate", "-b", "-e", if (ignore.case) 
+            "-i", if (regex) 
+            "--regex", sapply(db.wj, function(x) c("-d", x)), 
+            .q(pat), intern = 1)
+        n1 <- 20
+        cat(head(r1, n1), sep = "\n")
+        if (length(r1) > n1) {
+            hs.browser("34.11.10.225103")
+        }
+    }
+}
+"38_10_08_172545" <- function(max = 16) {
+    nc <- Ncpu()[1]
+    hs.cond(nc < 1, 1, nc > max, max)
+}
