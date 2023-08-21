@@ -344,35 +344,64 @@ hs.has_x <- function(E) {
             e <- substitute(e)
             x <- substitute(x)
         }
-        if (is.symbol(x) && (x == quote(.))) {
-            if (is.symbol(e) && is.function(e)) {
-                e
+        assign_back <- local({
+            i <- 1
+            right <- list()
+            while (is.call(x)) {
+                if (identical(x[[1]], quote(`%=>%`))) {
+                  right <- list(x[[3]], right)
+                  x <- x[[2]]
+                }
+                else if (identical(x[[1]], quote(`%<=>%`))) {
+                  right <- list(x[[3]], right)
+                  return(list(x[[2]], right))
+                }
+                else return()
+                i <- i + 1
             }
-            else {
-                if (!hs.has_x(e)) 
-                  e <- add_x(e)
-                body(hs_blank) <- bquote({
-                  .(e)
-                })
-                environment(hs_blank) <- env
-                hs_blank
+        })
+        if (length(assign_back)) {
+            right <- assign_back[[2]]
+            call_1 <- assign_back[[1]]
+            while (length(right)) {
+                call_1 <- call("%=>%", call_1, right[[1]])
+                right <- right[[2]]
             }
+            call_1 <- call("%=>%", call_1, e)
+            y <- eval(call_1, envir = env)
+            eval(as.call(list(quote(`<-`), assign_back[[1]], y)), envir = env)
         }
         else {
-            if (is.symbol(e) && do.call(is.function, list(e), envir = env) || e[[1]] == quote(hs.hsgly)) {
-                e <- bquote(.(e)(x))
+            if (is.symbol(x) && (x == quote(.))) {
+                if (is.symbol(e) && is.function(e)) {
+                  e
+                }
+                else {
+                  if (!hs.has_x(e)) 
+                    e <- add_x(e)
+                  body(hs_blank) <- bquote({
+                    .(e)
+                  })
+                  environment(hs_blank) <- env
+                  hs_blank
+                }
             }
-            else if (inherits(e, c("{", "("))) {
+            else {
+                if (is.symbol(e) && do.call(is.function, list(e), envir = env) || e[[1]] == quote(hs.hsgly)) {
+                  e <- bquote(.(e)(x))
+                }
+                else if (inherits(e, c("{", "("))) {
+                }
+                else if (!hs.has_x(e)) 
+                  e <- add_x(e)
+                if (assign) {
+                  hs1 <- if (out) 
+                    `<<-`
+                  else `<-`
+                  eval(bquote(.(hs1)(.(x), with(list(x = .(x)), .(e)))), envir = env)
+                }
+                else eval(bquote(with(list(x = .(x)), .(e))), envir = env)
             }
-            else if (!hs.has_x(e)) 
-                e <- add_x(e)
-            if (assign) {
-                hs1 <- if (out) 
-                  `<<-`
-                else `<-`
-                eval(bquote(.(hs1)(.(x), with(list(x = .(x)), .(e)))), envir = env)
-            }
-            else eval(bquote(with(list(x = .(x)), .(e))), envir = env)
         }
     }
 })
@@ -1035,6 +1064,14 @@ hs.init1 <- function() {
         }, envir = environment(hs.hsgly))
     }
     for (wj1 in c("org1.r", "my.r")) hs.fp(wk.dm.wjj, wj1) %=>% hs.getTextFile %=>% hs.source.robust
+    {
+        pager_fp <- "~/org/dm/sh/rj/pager"
+        if (!file.exists(pager_fp)) {
+            cat("#!/bin/bash", "less -i", sep = "\n", file = pager_fp %=>% hs.wj)
+            Sys.chmod(pager_fp, "0700")
+        }
+        options(pager = normalizePath(pager_fp))
+    }
 }
 my.r <- function() {
     wj1 <- hs.getTextFile(hs.wj(wk.dm.wjj, "my.r"))
@@ -1966,7 +2003,7 @@ hs.switch.hs <- function(AL, ..., no_match = NULL, env1 = parent.frame()) {
     if (n1%%2) 
         ...elt(n1)
 }
-hs.case <- hs.cond <- function(...) {
+hs.cond <- function(...) {
     n1 <- ...length()
     lang <- substitute(c(...))
     matched <- FALSE
@@ -1977,6 +2014,7 @@ hs.case <- hs.cond <- function(...) {
     if (n1%%2) 
         ...elt(n1)
 }
+hs.case <- hs.cond
 hs.if <- `if`
 hs.repeat <- function(exp1, env1 = parent.frame()) {
     eval(substitute(repeat exp1), envir = env1)
@@ -3399,7 +3437,6 @@ wj_row.hs.v_wj__perl <- function(v1, wj1, wj1.cn2use, mn = -1, ot = "dt", cn = m
         setnames(jg, cn.hs.wj(wj1))
     })
 }
-.chk <- function(wj1, n = 1) .wk("head -n", format(n, scientific = FALSE), .sys.fpGood(wj1))
 .tail <- function(f, n = 10) {
     .wk("cat_wk", hs.fpGood(f), "| perl -e", .q(paste0("\n$n = ", n, ";\n$i = 0;\nwhile( <>) {\n  $i = $. % 10;\n  $a[ $i] = $_;\n}\nif( $i < $n) {\n  foreach $j ( ( $i + 1) .. ( $n - 1)) {\n    print( $a[ $j]);\n  }\n}\nforeach $j ( 0 .. $i) {\n  print( $a[ $j]);\n}\n")))
 }
@@ -9880,6 +9917,18 @@ hs.xm <- function(wd = hs.home.expand("~/org")) {
     hs.wj.rm(wj2)
     hs.wj.symlink(wj1 = cfg_wj, wjj1 = dirname(wj2))
 }
+hs.send2wiz <- function() hs.hsgly("send2wiz.36.02.25.233554")()
+.chk <- function(wj1 = ".") {
+    if (dir.exists(wj1)) {
+        .wk("tree", "-aCfFhi -D", paste0("--timefmt=", .q("%F %H:%M:%S")), hs.fpGood(wjj1), " | less -FiNr")
+    }
+    else {
+        hs.cond(hs.grepl(wj1, "(?i)\\.(png|pdf)$"), .wk("opera", hs.fpGood(wj)), hs.browser("2023.08.20.212323", debug = 0))
+    }
+}
+.h <- .hist <- function(size = 1000) {
+    .wk("less -Ni +G", hs.save.history(size = size))
+}
 "30.10.31.202238" <- NULL
 .update <- function(all = rp, where = wk.ssh, U = TRUE, rp = FALSE) {
     hs.source.robust(hs.home.expand("~/.Rprofile"))
@@ -13482,15 +13531,26 @@ hs.fig_wj_wjj <- function() {
     }
     wj
 }
-.png <- function(exp1, wj = "tmp", width = height + 5, height = 10 * rh, wjj2 = hs.fig_wj_wjj(), units = "cm", rw = 1, rh = 1, pointsize = 12, res = 100, env1 = parent.frame(), family = "mono") {
-    on.exit(dev.off(), add = TRUE)
+.png <- function(exp1, wj = "tmp", width = height + 5, height = 10 * rh, wjj2 = hs.fig_wj_wjj(), units = "cm", rw = 1, rh = 1, pointsize = 12, res = 100, env1 = parent.frame(), family = "mono", crop = 1) {
+    off <- 0
+    on.exit(if (!off) dev.off(), add = TRUE)
     if (!hs.grepl(wj, "(?i)\\.png$")) 
-        wj %<>% paste0(".png")
+        wj %<=>% paste0(".png")
     if ((!hs.grepl(wj, "/")) && dir.exists(wjj2)) 
         wj <- hs.fp(wjj2, wj)
     here <- new.env(parent = env1)
+    if (crop) {
+        wj_real <- wj
+        wj <- hs.wj.temp()
+        on.exit(hs.wj.rm(wj), add = TRUE)
+    }
     png(hs.wj(wj), width, height, units = units, pointsize = pointsize, res = res, family = family)
     eval(substitute(exp1), here)
+    if (crop) {
+        dev.off()
+        off <- 1
+        hs.hsgly("切白边/2023_08_18_180631")(wj, wj2 = wj_real)
+    }
     wj <- normalizePath(wj)
     message(hs.wjm.home(wj))
     wj
