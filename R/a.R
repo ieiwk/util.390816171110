@@ -334,18 +334,21 @@ hs.has_x <- function(E) {
 "%=>%" <- local({
     hs_blank <- function(x, ...) {
     }
-    add_x <- function(E) if (E[[1]] == quote(`[`)) {
-        E[[2]] <- add_x(E[[2]])
-        E
+    add_x <- function(E) {
+        if (is.symbol(E)) 
+            return(call(paste(E), quote(x)))
+        if (E[[1]] == quote(`[`)) {
+            E[[2]] <- add_x(E[[2]])
+            E
+        }
+        else as.call(append(as.list(E), quote(x), after = 1))
     }
-    else as.call(append(as.list(E), quote(x), after = 1))
     function(x, e, env = parent.frame(), assign = 0, substitute = !assign, out = 0) {
         if (substitute) {
             e <- substitute(e)
             x <- substitute(x)
         }
         assign_back <- local({
-            i <- 1
             right <- list()
             while (is.call(x)) {
                 if (identical(x[[1]], quote(`%=>%`))) {
@@ -357,7 +360,6 @@ hs.has_x <- function(E) {
                   return(list(x[[2]], right))
                 }
                 else return()
-                i <- i + 1
             }
         })
         if (length(assign_back)) {
@@ -372,7 +374,30 @@ hs.has_x <- function(E) {
             eval(as.call(list(quote(`<-`), assign_back[[1]], y)), envir = env)
         }
         else {
-            if (is.symbol(x) && (x == quote(.))) {
+            start_with_. <- local({
+                right <- list()
+                while (is.call(x)) {
+                  if (identical(x[[1]], quote(`%=>%`))) {
+                    right <- list(x[[3]], right)
+                    if (x[[2]] == quote(.)) {
+                      return(right)
+                    }
+                    x <- x[[2]]
+                  }
+                  else return()
+                }
+            })
+            if (length(start_with_.)) {
+                call_1 <- quote(x)
+                while (length(start_with_.)) {
+                  call_1 <- call("%=>%", call_1, start_with_.[[1]])
+                  start_with_. <- start_with_.[[2]]
+                }
+                call_1 <- call("%=>%", call_1, e)
+                body(hs_blank) <- call_1
+                hs_blank
+            }
+            else if (is.symbol(x) && (x == quote(.))) {
                 if (is.symbol(e) && is.function(e)) {
                   e
                 }
@@ -387,7 +412,9 @@ hs.has_x <- function(E) {
                 }
             }
             else {
-                if (is.symbol(e) && do.call(is.function, list(e), envir = env) || e[[1]] == quote(hs.hsgly)) {
+                if (is.symbol(e) && do.call(is.function, list(e), envir = env) || is.call(e) && {
+                  paste(e[[1]]) %in% c("hs.hsgly", "::")
+                }) {
                   e <- bquote(.(e)(x))
                 }
                 else if (inherits(e, c("{", "("))) {
