@@ -816,10 +816,8 @@ hs.source.part <- function(wj, env = if (local) parent.frame() else .GlobalEnv, 
         stop("需用注释行作为分割行")
     if (!missing(wj)) {
         wj %<=>% hs.home.expand
-        nr %<=>% hs.readLines.robust
+        nr <- hs.readLines.robust(wj)
     }
-    if (length(nr)) 
-        eval(parse(text = head(nr, match(sep, nr, length(nr))), encoding = "UTF-8"), env)
     if (0) {
         i1 <- 15692
         eval(parse(text = append(head(nr, match(sep, nr, length(nr))), deparse(quote(message("37_01_25_105517"))), after = i1), encoding = "UTF-8"), env)
@@ -827,6 +825,8 @@ hs.source.part <- function(wj, env = if (local) parent.frame() else .GlobalEnv, 
         cat(head(nr, match(sep, nr, length(nr)))[seq.int(1110, 1130)], sep = "\n")
         wk.less(head(nr, match(sep, nr, length(nr))), start = i1)
     }
+    if (length(nr)) 
+        eval(parse(text = head(nr, match(sep, nr, length(nr))), encoding = "UTF-8"), env)
 }
 hs.source.rd <- function(wj, env = .GlobalEnv, text) {
     if (missing(text)) 
@@ -1036,7 +1036,7 @@ hs.source2wj <- function(hs1, wjj2 = "~/tmp") {
 hs.init <- function(wjj = wk.dm.wjj, smart = 1) {
     wjj %<=>% hs.home.expand
     ..debug <- 0
-    wj <- sapply(file.path(wjj, paste0(c("internal.r", "string.r", "wj.r", "data.table.r", "xm.r", "function.common.r", "swxx.r", "fig.r", "math.r", if (interactive()) c("zim.r", "org1.r"), if (hs.machine.isLocal()) c("my.r")), "")), hs.getTextFile) %=>% unlist
+    wj <- sapply(file.path(wjj, paste0(c("internal.r", "string.r", "wj.r", "data.table.r", "xm.r", "function.common.r", "代码分析.r", "swxx.r", "fig.r", "math.r", if (interactive()) c("zim.r", "org1.r"), if (hs.machine.isLocal()) c("my.r")), "")), hs.getTextFile) %=>% unlist
     sapply(wj, . %=>% {
         if (file.exists(x)) {
             if (hs.machine.isLocal()) 
@@ -1095,6 +1095,8 @@ hs.init1 <- function() {
         }
         options(pager = normalizePath(pager_fp))
     }
+    "~/.db/2do.org.gz" %=>% hs.wj %=>% if (!file.exists(x)) 
+        cat(letters, file = .sys("| gzip >", hs.fpGood(x)))
 }
 my.r <- function() {
     wj1 <- hs.getTextFile(hs.wj(wk.dm.wjj, "my.r"))
@@ -1796,15 +1798,23 @@ hs.list.flatten <- function(L, hs1 = identity, D = 2, hs2 = rbindlist) {
     }))
     rbindlist(a1[["get"]]())
 }
-hs.list.merge <- function(L) {
+hs.list.merge <- function(L, name = 1) {
     a1 <- tapply(seq_along(L), names(L), list)
     i1 <- which(sapply(a1, length) > 1)
     if (length(i1)) {
         for (i1.1 in i1) {
             i2 <- a1[[i1.1]]
-            L[[i2[1]]] <- L[[i2[1]]] %or% unlist(L[i2[-1]])
+            L[[i2[1]]] %<=>% (x %or% unlist(L[i2[-1]]))
         }
-        L[unlist(lapply(a1[i1], "[", -1))] <- {
+        i2rm <- lapply(i1, . %=>% a1[[x]][-1]) %=>% unlist
+        L[i2rm] <- {
+        }
+    }
+    if (!name) {
+        for (i1 in seq_along(L)) {
+            n1 <- names(L)[i1]
+            if (n1 %in% L[[i1]]) 
+                L[[i1]] %<=>% (x %not% n1)
         }
     }
     L
@@ -2733,10 +2743,12 @@ hs.xor <- function(v1, v2, ot = "l") {
         a
     }, n = c(sum(v1 %not.in% v2), sum(v2 %not.in% v1)))
 }
-hs.msg <- function(msg = "", ln = 0, lw = 10) {
-    message(sprintf(paste0("%-", lw, "s"), if (ln) 
+hs.msg <- function(msg = "", ln = 0, lw = 10, ot = {
+}) {
+    msg %<=>% paste(sprintf(paste0("%-", lw, "s"), if (ln) 
         paste(rep("*", ln), collapse = "")
-    else ""), "[", Sys.time(), "] ", msg)
+    else ""), "[", Sys.time(), "] ", x)
+    hs.switch(ot, "s", msg, message(msg))
 }
 .muid4machine <- .m4m <- function(names, n = 1, interval = 0.01, precision = 1e+09, sep = if (precision > 0) "." else "_", sep1 = "_", hz = {
 }, time_pattern = paste(c("%Y", "%m", "%d", "%H%M%S"), collapse = sep)) {
@@ -4365,6 +4377,22 @@ ieiwk.get.callForm <- function(...) {
 ieiwk.dynamicScope <- function(fn, env = parent.frame()) {
     environment(fn) <- env
     fn
+}
+hs.hs_absPath <- function(e) {
+    if (is.call(e)) {
+        if (length(e[[1]]) == 1) {
+            hs.switch(e[[1]], quote(`%>%`), e[[1]] <- quote(`%=>%`), quote(aes), e[[1]] <- quote(ggplot2::aes), quote(Anova), e[[1]] <- quote(car::Anova), quote(arrange), e[[1]] <- quote(dplyr::arrange), quote(as.data.table), e[[1]] <- quote(data.table::as.data.table), quote(case_when), e[[1]] <- quote(dplyr::case_when), quote(coord_flip), e[[1]] <- quote(ggplot2::coord_flip), quote(desc), e[[1]] <- quote(dplyr::desc), quote(distinct), e[[1]] <- quote(dplyr::distinct), quote(element_blank), e[[1]] <- quote(ggplot2::element_blank), 
+                quote(element_text), e[[1]] <- quote(ggplot2::element_text), quote(filter), e[[1]] <- quote(dplyr::filter), quote(geom_hline), e[[1]] <- quote(ggplot2::geom_hline), quote(geom_pointrange), e[[1]] <- quote(ggplot2::geom_pointrange), quote(geom_text), e[[1]] <- quote(ggplot2::geom_text), quote(ggplot), e[[1]] <- quote(ggplot2::ggplot), quote(ggtitle), e[[1]] <- quote(ggplot2::ggtitle), quote(group_by), e[[1]] <- quote(dplyr::group_by), quote(labs), e[[1]] <- quote(ggplot2::labs), quote(left_join), 
+                e[[1]] <- quote(dplyr::left_join), quote(mutate), e[[1]] <- quote(dplyr::mutate), quote(n), e[[1]] <- quote(dplyr::n), quote(or_glm), e[[1]] <- quote(oddsratio::or_glm), quote(pivot_wider), e[[1]] <- quote(tidyr::pivot_wider), quote(read.fst), e[[1]] <- quote(fst::read.fst), quote(rename), e[[1]] <- quote(dplyr::rename), quote(rownames_to_column), e[[1]] <- quote(tibble::rownames_to_column), quote(scale_color_manual), e[[1]] <- quote(ggplot2::scale_color_manual), quote(scale_y_log10), 
+                e[[1]] <- quote(ggplot2::scale_y_log10), quote(select), e[[1]] <- quote(dplyr::select), quote(stepAIC), e[[1]] <- quote(MASS::stepAIC), quote(summarise), e[[1]] <- quote(dplyr::summarise), quote(theme), e[[1]] <- quote(ggplot2::theme), quote(theme_cowplot), e[[1]] <- quote(cowplot::theme_cowplot))
+        }
+        if (length(e) > 1) {
+            for (i in 2:length(e)) {
+                e[[i]] <- hs.hs_absPath(e[[i]])
+            }
+        }
+    }
+    e
 }
 defmacro <- function(..., expr) {
     expr <- substitute(expr)
@@ -8367,14 +8395,7 @@ hs.dm.2svr <- function(wjj = hs.home.expand("~/org/dm"), where = wk.ssh, only = 
     }
 }
 hs.jdi <- function(local = 1, up = parent.frame()) {
-    wj <- hs.home.expand(paste0("~/tmp/jdi.", c("r", "rd", "r.xz")))
-    wj <- wj[file.exists(wj)]
-    if (length(wj) > 1) 
-        wj <- wj[which.max(file.mtime(wj))]
-    if (0) {
-        a1 <- hs.load(wj)
-        head(a1)
-    }
+    wj <- hs.getTextFile("~/.db/jdi.r")
     env1 <- if (local) 
         up
     else .GlobalEnv
@@ -8504,7 +8525,7 @@ hs.hsgly <- local({
             return()
         }
         uid <- hs.re(wjm, uid_end.pattern)
-        if ((!hs.machine.isLocal()) && (.libPaths() %=>% lapply(hs.wjj.ls, wjj = 1) %=>% unlist %=>% basename %=>% ("util.390816171110" %in% x))) {
+        if ((!hs.machine.isLocal()) && ("util.390816171110" %in% .packages(1))) {
             uid %<=>% hs.gsub("[^0-9]", "_")
             return(eval(call("::", "util.390816171110", uid)))
         }
@@ -9949,7 +9970,7 @@ hs.send2wiz <- function() hs.hsgly("send2wiz.36.02.25.233554")()
         .wk("tree", "-aCfFhi -D", paste0("--timefmt=", .q("%F %H:%M:%S")), hs.fpGood(wjj1), " | less -FiNr")
     }
     else {
-        hs.cond(hs.grepl(wj1, "(?i)\\.(png|pdf)$"), .wk("opera", hs.fpGood(wj)), hs.browser("2023.08.20.212323", debug = 0))
+        hs.cond(hs.grepl(wj1, "(?i)\\.(png|pdf)$"), .wk("opera", hs.fpGood(wj1)), hs.browser("2023.08.20.212323", debug = 0))
     }
 }
 .h <- .hist <- function(size = 1000) {
@@ -14317,8 +14338,9 @@ hs.median_i <- function(x) which.min(abs(x - median(x)))
         .[[1]][2] %>% trim %>% dirname
     }
 }
-"2023_07_06_121233" <- function(wjj = ".") {
-    hs.with_wd(wjj, .wk("R --vanilla CMD INSTALL -l ~/rj/lib/R/ ./"))
+"2023_07_06_121233" <- function(wjj = ".", lib = .libPaths()[1]) {
+    hs.with_wd(wjj, .wk("R --vanilla CMD INSTALL -l", hs.fpGood(lib), 
+        "./"))
 }
 "38_11_30_134231" <- function(wj1) {
     wk.fread(text = .sys.cat.text(wj1) %>% .wk("| head", intern = 1))
