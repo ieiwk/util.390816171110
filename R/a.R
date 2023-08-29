@@ -380,7 +380,9 @@ hs.has_x <- function(E) {
             else {
                 if (!hs.has_x(e)) 
                   e <- add_x(e)
-                body(hs_blank) <- bquote({
+                body(hs_blank) <- if (e[[1]] == quote(`{`)) 
+                  bquote(.(e))
+                else bquote({
                   .(e)
                 })
                 environment(hs_blank) <- env
@@ -408,6 +410,7 @@ hs.has_x <- function(E) {
             }
             call_1 <- call("%=>%", call_1, e)
             body(hs_blank) <- call_1
+            environment(hs_blank) <- env
             return(hs_blank)
         }
         if (is.symbol(e) && do.call(is.function, list(e), envir = env) || is.call(e) && {
@@ -1002,12 +1005,23 @@ hs.require <- function(bao, install = reinstall, reinstall = 0, lib = .libPaths(
                   if (system("pkg-config --libs zlib")) {
                     system("sudo apt install zlib1g-dev")
                   }
-                }, "scRNAtoolVis", hs.require(c("junjunlab/jjAnno", "sajuukLyu/ggunchull", "ComplexHeatmap", "junjunlab/scRNAtoolVis"), 1))
+                }, "scRNAtoolVis", hs.require(c("junjunlab/jjAnno", "sajuukLyu/ggunchull", "ComplexHeatmap", "junjunlab/scRNAtoolVis"), 1), "Rediscover", {
+                  if (system("pkg-config --libs fftw3")) 
+                    system("sudo apt install libfftw3-dev")
+                }, "car", {
+                  if (system("type gfortran")) 
+                    system("sudo apt install gfortran")
+                })
                 wj1 <- "~/.Rprofile"
                 wj2 <- paste0(wj1, ".备份")
                 if (file.exists(wj1)) 
                   file.rename(wj1, wj2)
-                hs.install.packages(b1, lib = lib, ...)
+                A <- list(b1, lib = lib, ...)
+                if ((length(b1) > 1) && ("stringi" %in% b1)) 
+                  hs.browser("2023.08.28.214104", debug = 0)
+                if (b1 == "stringi") 
+                  A[["configure.vars"]] <- paste0("ICUDT_DIR=", "~/db/软件/src/R包/stringi")
+                do.call(hs.install.packages, A)
                 if (!file.exists(wj1)) 
                   file.rename(wj2, wj1)
                 e1 <- 1
@@ -4378,22 +4392,6 @@ ieiwk.dynamicScope <- function(fn, env = parent.frame()) {
     environment(fn) <- env
     fn
 }
-hs.hs_absPath <- function(e) {
-    if (is.call(e)) {
-        if (length(e[[1]]) == 1) {
-            hs.switch(e[[1]], quote(`%>%`), e[[1]] <- quote(`%=>%`), quote(aes), e[[1]] <- quote(ggplot2::aes), quote(Anova), e[[1]] <- quote(car::Anova), quote(arrange), e[[1]] <- quote(dplyr::arrange), quote(as.data.table), e[[1]] <- quote(data.table::as.data.table), quote(case_when), e[[1]] <- quote(dplyr::case_when), quote(coord_flip), e[[1]] <- quote(ggplot2::coord_flip), quote(desc), e[[1]] <- quote(dplyr::desc), quote(distinct), e[[1]] <- quote(dplyr::distinct), quote(element_blank), e[[1]] <- quote(ggplot2::element_blank), 
-                quote(element_text), e[[1]] <- quote(ggplot2::element_text), quote(filter), e[[1]] <- quote(dplyr::filter), quote(geom_hline), e[[1]] <- quote(ggplot2::geom_hline), quote(geom_pointrange), e[[1]] <- quote(ggplot2::geom_pointrange), quote(geom_text), e[[1]] <- quote(ggplot2::geom_text), quote(ggplot), e[[1]] <- quote(ggplot2::ggplot), quote(ggtitle), e[[1]] <- quote(ggplot2::ggtitle), quote(group_by), e[[1]] <- quote(dplyr::group_by), quote(labs), e[[1]] <- quote(ggplot2::labs), quote(left_join), 
-                e[[1]] <- quote(dplyr::left_join), quote(mutate), e[[1]] <- quote(dplyr::mutate), quote(n), e[[1]] <- quote(dplyr::n), quote(or_glm), e[[1]] <- quote(oddsratio::or_glm), quote(pivot_wider), e[[1]] <- quote(tidyr::pivot_wider), quote(read.fst), e[[1]] <- quote(fst::read.fst), quote(rename), e[[1]] <- quote(dplyr::rename), quote(rownames_to_column), e[[1]] <- quote(tibble::rownames_to_column), quote(scale_color_manual), e[[1]] <- quote(ggplot2::scale_color_manual), quote(scale_y_log10), 
-                e[[1]] <- quote(ggplot2::scale_y_log10), quote(select), e[[1]] <- quote(dplyr::select), quote(stepAIC), e[[1]] <- quote(MASS::stepAIC), quote(summarise), e[[1]] <- quote(dplyr::summarise), quote(theme), e[[1]] <- quote(ggplot2::theme), quote(theme_cowplot), e[[1]] <- quote(cowplot::theme_cowplot))
-        }
-        if (length(e) > 1) {
-            for (i in 2:length(e)) {
-                e[[i]] <- hs.hs_absPath(e[[i]])
-            }
-        }
-    }
-    e
-}
 defmacro <- function(..., expr) {
     expr <- substitute(expr)
     a <- substitute(list(...))[-1]
@@ -4928,6 +4926,15 @@ hs.hs.reduce <- function(e1) {
         e1[[1]] <- quote(file.path)
     })
     e1
+}
+hs.arg_supplied_p <- function(name, hs2, ...) {
+    i <- match(name, ...names(), nomatch = 0)
+    if (i) 
+        return(i)
+    hs.browser("2023.08.29.192954", debug = 0)
+    al <- formals(hs2)
+    p1 <- match(name, names(al))
+    ...names()
 }
 hs.pastec <- function(..., collapse = " ") .Internal(paste0(list(c(...)), collapse))
 hs.pastec0 <- function(...) .Internal(paste0(list(c(...)), ""))
@@ -8394,8 +8401,8 @@ hs.dm.2svr <- function(wjj = hs.home.expand("~/org/dm"), where = wk.ssh, only = 
         else wk.rsync.out(wjj_sub, wjj, ssh = where)
     }
 }
-hs.jdi <- function(local = 1, up = parent.frame()) {
-    wj <- hs.getTextFile("~/.db/jdi.r")
+.j <- hs.jdi <- function(local = 1, up = parent.frame()) {
+    wj <- switch(tolower(Sys.info()["sysname"]), linux = "/dev/shm/wk/39_08_27_220959.txt", "~/.db/buffer4tmux.txt") %=>% hs.getTextFile
     env1 <- if (local) 
         up
     else .GlobalEnv
@@ -9967,7 +9974,7 @@ hs.xm <- function(wd = hs.home.expand("~/org")) {
 hs.send2wiz <- function() hs.hsgly("send2wiz.36.02.25.233554")()
 .chk <- function(wj1 = ".") {
     if (dir.exists(wj1)) {
-        .wk("tree", "-aCfFhi -D", paste0("--timefmt=", .q("%F %H:%M:%S")), hs.fpGood(wjj1), " | less -FiNr")
+        .wk("tree", "-aCfFhi -D", paste0("--timefmt=", .q("%F %H:%M:%S")), hs.fpGood(wj1), " | less -FiNr")
     }
     else {
         hs.cond(hs.grepl(wj1, "(?i)\\.(png|pdf)$"), .wk("opera", hs.fpGood(wj1)), hs.browser("2023.08.20.212323", debug = 0))
@@ -13588,8 +13595,9 @@ hs.fig_wj_wjj <- function() {
     here <- new.env(parent = env1)
     if (crop) {
         wj_real <- wj
-        wj <- hs.wj.temp()
-        on.exit(hs.wj.rm(wj), add = TRUE)
+        wj_temp <- hs.wj.temp()
+        on.exit(hs.wj.rm(wj_temp), add = TRUE)
+        wj <- wj_temp
     }
     png(hs.wj(wj), width, height, units = units, pointsize = pointsize, res = res, family = family)
     eval(substitute(exp1), here)
@@ -13597,6 +13605,7 @@ hs.fig_wj_wjj <- function() {
         dev.off()
         off <- 1
         hs.hsgly("切白边/2023_08_18_180631")(wj, wj2 = wj_real)
+        wj <- wj_real
     }
     wj <- normalizePath(wj)
     message(hs.wjm.home(wj))
@@ -14276,6 +14285,264 @@ wk.bigz <- function(n1) {
     gmp::as.bigz(10)^n1
 }
 hs.median_i <- function(x) which.min(abs(x - median(x)))
+hs.is_assignment <- function(e, assigner = c("<-", "<<-", "="), dt = {
+}) {
+    if (!is.call(e)) 
+        return(FALSE)
+    if (length(e) < 2) 
+        return(FALSE)
+    if ((length(e[[1]]) == 1) && (paste(e[[1]]) %in% assigner)) 
+        return(TRUE)
+    if ((length(e) == 4) && (e[[1]] == quote(`[`)) && (length(e[[4]]) > 1) && (e[[4]][[1]] == quote(`:=`)) && (if (length(dt)) 
+        paste(e[[2]]) %in% dt
+    else TRUE)) 
+        return(TRUE)
+    return(FALSE)
+}
+hs.has_assignment <- function(e1, assigner = eval(formals(hs.is_assignment)[["assigner"]])) {
+    if (!is.call(e1)) 
+        return(FALSE)
+    if (length(e1) < 2) 
+        return(FALSE)
+    if (hs.is_assignment(e1, assigner = assigner)) 
+        return(TRUE)
+    if ((length(e1[[1]]) == 1)) {
+        if (paste(e1[[1]]) %in% c("local", "apply", "sapply", "lapply", "function")) 
+            return()
+    }
+    return(as.list(e1[-1]) %=>% lapply(hs.has_assignment) %=>% unlist %=>% any)
+}
+hs.get_assignment <- function(e1, assigner = eval(formals(hs.is_assignment)[["assigner"]])) {
+    if (!is.call(e1)) 
+        return()
+    if (length(e1) < 2) 
+        return()
+    if (hs.is_assignment(e1, assigner = assigner)) 
+        return(e1)
+    if ((length(e1[[1]]) == 1)) {
+        if (paste(e1[[1]]) %in% c("local", "apply", "sapply", "lapply", "function")) 
+            return()
+    }
+    return(as.list(e1[-1]) %=>% lapply(hs.get_assignment) %=>% unlist)
+}
+hs.is_block <- function(e) {
+    is.call(e) && ((e[[1]] == quote(`for`)) || (e[[1]] == quote(`{`)))
+}
+hs.get_symbol <- function(e, side = "right", fn = 0) {
+    if (is.symbol(e)) 
+        return(paste(e))
+    if (side == "left") {
+        if (e[[1]] == quote(`for`)) 
+            return(hs.get_symbol(e[[4]], side = "left"))
+        if ((e[[1]] == quote(`<-`)) || (e[[1]] == quote(`<<-`)) || (e[[1]] == quote("[")) || (e[[1]] == quote("[["))) 
+            return(hs.get_symbol(e[[2]], side = "left"))
+        if (e[[1]] == quote(`$`)) 
+            return(paste(e[[2]]))
+        if ((e[[1]] == quote(`[`)) && (length(e) == 4) && is.call(e[[4]]) && (e[[4]][[1]] == quote(`:=`))) 
+            return(paste(e[[2]]))
+        return(lapply(as.list(e[-1]), hs.get_symbol, side = "left") %=>% unlist %=>% unique)
+    }
+    if (is.call(e)) {
+        if (length(e[[1]]) == 1) {
+            if (e[[1]] == quote(`$`)) 
+                return(hs.get_symbol(e[[2]], fn = fn))
+            if (fn && e[[1]] == quote(`::`)) 
+                return(lapply(as.list(e[-1]), hs.get_symbol, fn = fn) %=>% unlist %=>% unique)
+            if ((e[[1]] == quote(`<-`)) || (e[[1]] == quote(`=`)) || (e[[1]] == quote(`:=`))) 
+                return(hs.get_symbol(e[[3]], fn = fn))
+        }
+        lapply(as.list(if (fn) 
+            e
+        else e[-1]), hs.get_symbol, fn = fn) %=>% unlist %=>% unique
+    }
+}
+hs.is_assignment_or_block <- function(e) {
+    is.call(e) && ((e[[1]] == quote(`<-`)) || (e[[1]] == quote(`=`)) || (e[[1]] == quote(`for`)) || ((e[[1]] == quote(`[`)) && (e[[4]][[1]] == quote(`:=`))))
+}
+hs.hs_absPath <- local({
+    pkg_base <- c("rlang", "magrittr", "tidyselect", "pillar")
+    pkg_common <- c("ggplot2", "ggfittext", "cowplot", "RColorBrewer", "dplyr", "tidyr", "tibble", "fst", "data.table", "MASS", "car")
+    pkg.fn <- pkg.fn.extra <- {
+    }
+    function(e, pkg = {
+    }) {
+        if (!length(pkg.fn)) 
+            local({
+                pkg.fn <- hs.lapply(pkg_common, . %=>% {
+                  pkg_other <- c(pkg_common, pkg_base) %not% x
+                  exported <- getNamespaceExports(x)
+                  imported <- getNamespaceImports(x)
+                  imported <- getNamespaceImports(x) %=>% x[names(x) %in% pkg_other] %=>% unlist
+                  exported %not% imported
+                }) %=>% wk.dt.fromList(nm = c("pkg", "fn"))
+                dt_2keep <- c("as.data.table", "is.data.table", "data.table", "fread", "fwrite", "set", "setDT", "setDF", "setkeyv", "setkey", "setorderv", "setorder", "setindex", "setindexv", "setnames", "setDTthreads", "getDTthreads", "uniqueN", "key", "haskey", "indices", "copy", "melt")
+                pkg.fn %<=>% x[!((pkg %in% "data.table") & (fn %not.in% dt_2keep))]
+                u <- pkg.fn[fn %=>% {
+                  x %not.in% hs.duplicated(x)
+                }]
+                s <- pkg.fn[fn %not.in% u[, fn]][fn %=>% match(unique(x), x)]
+                pkg.fn <<- wk.dt.rbind(u, s)
+            })
+        pkg.fn.extra <<- if (length(pkg)) {
+            hs.lapply(pkg, getNamespaceExports) %=>% wk.dt.fromList(nm = c("pkg", "fn"))
+        }
+        else list(pkg = "", fn = "") %=>% wk.dt.as(x)[-1]
+        if (missing(e)) 
+            return()
+        if (is.call(e)) {
+            if (length(e[[1]]) == 1) {
+                if (e[[1]] == quote(`%>%`)) {
+                  e[[1]] <- quote(`%=>%`)
+                }
+                else if ({
+                  i <- pkg.fn[, match(paste(e[[1]]), fn, nomatch = 0)]
+                }) {
+                  e[[1]] <- pkg.fn[i, call("::", as.symbol(pkg), as.symbol(fn))]
+                }
+                else if ({
+                  i <- pkg.fn.extra[, match(paste(e[[1]]), fn, nomatch = 0)]
+                }) {
+                  e[[1]] <- pkg.fn.extra[i, call("::", as.symbol(pkg), as.symbol(fn))]
+                }
+            }
+            if (length(e) > 1) {
+                for (i in 2:length(e)) {
+                  e[[i]] <- hs.hs_absPath(e[[i]])
+                }
+            }
+        }
+        e
+    }
+})
+hs.pkg_used <- function(e) {
+    if (is.call(e)) {
+        if ((length(e) > 1) && ((e[[1]] == quote(`::`)) || (e[[1]] == quote(`:::`)))) 
+            return(paste(e[[2]]))
+        lapply(as.list(e), hs.pkg_used) %=>% unlist
+    }
+}
+"39_08_29_182030" <- function(pkg, add_a_blank_link_at_the_end = 1) {
+    bquote({
+        if (!("devtools" %in% .packages(TRUE))) 
+            install.packages("devtools")
+        if (!("util.390816171110" %in% .packages(TRUE))) 
+            devtools::install_github("ieiwk/util.390816171110")
+        library(util.390816171110)
+        local({
+            for (pkg_1 in .(pkg)) {
+                if (pkg_1 %not.in% .packages(TRUE)) {
+                  hs.require(pkg_1)
+                }
+            }
+        })
+    }) %=>% as.list(x)[-1] %=>% lapply(deparse) %=>% unlist %=>% 
+        cat("# r包", x, if (add_a_blank_link_at_the_end) 
+            "", sep = "\n")
+}
+"2023_08_29_191711" <- function(e, abs = 1, abs_argList = list()) {
+    if (is.call(e)) {
+        e <- list(e)
+    }
+    else e <- as.list(e)
+    if (abs) {
+        hs1 <- hs.hs_absPath
+        if (length(abs_argList)) 
+            formals(hs1)[names(abs_argList)] <- abs_argList
+        hs1()
+    }
+    if (0) 
+        lapply(e, function(e1) {
+            hs.browser("2023.08.29.200052", debug = 0)
+            environment()
+            ls()
+            getAnywhere("abs")
+            if (abs) 
+                e1 <- hs1(e1)
+            hs.pkg_used(e1)
+        }) %=>% unlist %=>% hs.table %=>% hs.sort %=>% names
+    lapply(e, . %=>% {
+        if (abs) 
+            hs1(x)
+        else x
+    } %=>% hs.pkg_used) %=>% unlist %=>% hs.table %=>% hs.sort %=>% 
+        names
+}
+"2023_08_29_190716" <- local({
+    hs1 <- function(left, left.right) {
+        right <- left.right[left] %=>% unlist %=>% (`%or%`(left))
+        if (length(right) > length(left)) {
+            right %or% hs1(left %or% right, left.right)
+        }
+    }
+    function(e, e.fp, target_pattern, include_target = 1) {
+        if (!missing(e.fp)) 
+            e <- parse(e.fp)
+        el <- hs.catch(seq_along(e) %=>% for (i in seq_along(x)) {
+            hs.msg(i)
+            e1 <- e[[i]]
+            a <- hs.get_assignment(e1)
+            if (length(a)) {
+                if (!is.list(a)) 
+                  a %<=>% list
+                left <- sapply(a, . %=>% hs.get_symbol(x[[2]], 
+                  side = "left"))
+                if (is.list(left)) 
+                  hs.browser("2023.08.24.015157", debug = 0)
+                right <- lapply(a, . %=>% as.list(x[-c(1, 2)]) %=>% 
+                  lapply(hs.get_symbol, fn = 1) %=>% unlist %=>% 
+                  hs.clean)
+                hs.throw(i, hs.c(left, right) %=>% hs.list.merge(name = 0) %=>% 
+                  list)
+            }
+            else hs.throw(i, list())
+        }, named = 1)
+        i <- hs.catch(seq_along(e) %=>% for (i in x) {
+            s <- e[[i]] %=>% deparse(width.cutoff = 500)
+            if (any(hs.grepl(s, target_pattern))) {
+                hs.throw(i)
+            }
+        }) %=>% unlist
+        if (length(i) != 1) 
+            hs.browser("2023.08.29.190939", debug = 0)
+        i1 <- i[1]
+        node <- seq(i1) %=>% lapply(x, . %=>% el[[x]] %=>% if (length(x)) 
+            names(x[[1]])) %=>% unlist %=>% unique
+        l.r <- el %=>% head(i1) %=>% lapply(x, . %=>% {
+            if (length(x)) {
+                for (j in seq_along(x[[1]])) x[[1]][[j]] %<=>% 
+                  (`%and%`(node))
+            }
+            x
+        }) %=>% hs.catch(lapply(x, . %=>% {
+            if (length(x)) {
+                x <- x[[1]]
+                for (i in seq_along(x)) hs.throw(names(x)[i], 
+                  x[[i]] %=>% (`%and%`(node)))
+            }
+        }), named = 1)
+        l.r %<=>% hs.list.merge(name = 0)
+        left <- hs.get_symbol(e[[i1]], fn = 1) %and% node
+        right <- hs1(left, l.r) %=>% unique
+        e_involved <- hs.catch(seq(i1) %=>% for (i in x) {
+            e1 <- e[[i]]
+            a <- hs.get_assignment(e1)
+            if (length(a)) {
+                if (!is.list(a)) 
+                  a %<=>% list
+                left <- sapply(a, . %=>% hs.get_symbol(x[[2]], 
+                  side = "left"))
+                if (is.list(left)) 
+                  hs.browser("2023.08.24.015157", debug = 0)
+                if (left %=>% (`%in%`(right)) %=>% sum) {
+                  hs.throw(i, e1)
+                }
+            }
+        }, named = 1)
+        if (include_target && (i1 %not.in% names(e_involved))) 
+            e_involved[[paste(i1)]] <- e[[i1]]
+        e_involved
+    }
+})
 "37_12_08_170744" <- local({
     conda_wjj <- c("~/miniconda3", "~/rj/miniconda3", "/opt/biosoft/anaconda3") %=>% 
         x[file.exists(x)][1]
