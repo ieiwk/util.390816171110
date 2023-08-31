@@ -338,8 +338,7 @@ hs.has_x <- function(E) {
         if (is.symbol(E)) 
             return(as.call(list(E, quote(x))))
         if (E[[1]] == quote(`[`)) {
-            E[[2]] <- add_x(E[[2]])
-            E
+            return(as.call(append(as.list(E), quote(x), 1)))
         }
         else as.call(append(as.list(E), quote(x), after = 1))
     }
@@ -347,6 +346,9 @@ hs.has_x <- function(E) {
         if (substitute) {
             e <- substitute(e)
             x <- substitute(x)
+        }
+        if ((length(e) == 1) && is.character(e)) {
+            e <- as.symbol(e)
         }
         assign_back <- local({
             right <- list()
@@ -429,7 +431,9 @@ hs.has_x <- function(E) {
             else `<-`
             eval(bquote(.(hs1)(.(x), with(list(x = .(x)), .(e)))), envir = env)
         }
-        else eval(bquote(with(list(x = .(x)), .(e))), envir = env)
+        else {
+            eval(bquote(with(list(x = .(x)), .(e))), envir = env)
+        }
     }
 })
 "%<=>%" <- function(x, e, env = parent.frame()) {
@@ -3976,6 +3980,22 @@ ieiwk.file.size <- function(f1, co = 1024^2, bj = 0) {
 }
 ieiwk.copy.wjj.jiegou <- function(wjj1, wjj2 = dirname(wjj1[1]), qianzhui = "speedseq") {
     ieiwk.file.path(wjj2, qianzhui, type = "wjj")
+}
+hs.with_sink <- function(wj2, ...) {
+    sink.con <- if (hs.grepl(wj2, "(?i)\\.gz$")) {
+        on.exit({
+            sink()
+            close(sink.con)
+        }, add = TRUE)
+        gzfile(wj2, "w")
+    }
+    else {
+        on.exit(sink(), add = TRUE)
+        wj2
+    }
+    sink(sink.con)
+    list(...)
+    wj2
 }
 uid_fp_source <- function(uid1 = c(), fp1 = c(), less = 0, ...) {
     if (length(uid1)) {
@@ -14450,16 +14470,6 @@ hs.pkg_used <- function(e) {
             formals(hs1)[names(abs_argList)] <- abs_argList
         hs1()
     }
-    if (0) 
-        lapply(e, function(e1) {
-            hs.browser("2023.08.29.200052", debug = 0)
-            environment()
-            ls()
-            getAnywhere("abs")
-            if (abs) 
-                e1 <- hs1(e1)
-            hs.pkg_used(e1)
-        }) %=>% unlist %=>% hs.table %=>% hs.sort %=>% names
     lapply(e, . %=>% {
         if (abs) 
             hs1(x)
@@ -14467,7 +14477,7 @@ hs.pkg_used <- function(e) {
     } %=>% hs.pkg_used) %=>% unlist %=>% hs.table %=>% hs.sort %=>% 
         names
 }
-"2023_08_29_190716" <- local({
+"39_08_29_190716" <- local({
     hs1 <- function(left, left.right) {
         right <- left.right[left] %=>% unlist %=>% (`%or%`(left))
         if (length(right) > length(left)) {
@@ -14543,6 +14553,62 @@ hs.pkg_used <- function(e) {
         e_involved
     }
 })
+"39_08_29_205824" <- function(e.fp, wj2 = "~/a.r.gz", e_involved, 
+    pkg = {
+    }, ow = 0) {
+    if (file.exists(wj2) && (!ow)) 
+        stop("[39_08_29_210757|文件已存在]", wj2)
+    if (!missing(e.fp)) 
+        e <- parse(e.fp)
+    if (names(e_involved) %=>% {
+        length(x) && (x %all.in% seq_along(e))
+    }) {
+        pkg_used <- hs.hsgly("代码操作/r/包/用到的/2023_08_29_191711")(e_involved)
+        {
+            a <- readLines(e.fp)
+            hs.hs_absPath(pkg = pkg)
+            on.exit(hs.hs_absPath(), add = TRUE)
+            hs.with_sink(wj2, {
+                hs.hsgly("代码操作/r/包/确保已安装/39_08_29_182030")(pkg = pkg_used)
+                i1 <- i2 <- 1
+                ei <- 0
+                ei_max <- e_involved %=>% names %=>% as.integer %=>% 
+                  max
+                while (i2 <= length(a)) {
+                  if (ei > ei_max) 
+                    break
+                  code1 <- a[seq(i1, i2)]
+                  e1 <- .try(parse(text = code1))
+                  if (input.is.incomplete(e1)) {
+                    i2 %<=>% +1
+                    next
+                  }
+                  i1 <- i2 <- i2 + 1
+                  if (length(e1)) {
+                    ei %<=>% +1
+                    if (!(ei %in% names(e_involved))) {
+                      hs.catn(hs.msg(ei, ot = "s"))
+                      next
+                    }
+                    code2 <- e_involved[[paste(ei)]] %=>% hs.hs_absPath %=>% 
+                      deparse(control = "all")
+                    comment_end <- code1 %=>% tail(1) %=>% hs.re(" *#.*$")
+                    if (length(comment_end)) {
+                      if (hs.sub(comment_end, "[^#]*#+") %=>% 
+                        hs.grepl("#")) 
+                        hs.browser("2023.08.25.205004", debug = 0)
+                      code2 %<=>% paste0(comment_end)
+                    }
+                    hs.catn(code2)
+                  }
+                  else hs.cat(code1)
+                }
+            })
+        }
+        wj2
+    }
+    else hs.browser("2023.08.29.210057", debug = 0)
+}
 "37_12_08_170744" <- local({
     conda_wjj <- c("~/miniconda3", "~/rj/miniconda3", "/opt/biosoft/anaconda3") %=>% 
         x[file.exists(x)][1]
@@ -15451,6 +15517,69 @@ hs.pkg_used <- function(e) {
             ssh = to, p = 0)
         wk.rsync.out.same_place("~/.ssh/config", ssh = to, p = 0)
     }
+}
+"39_07_29_011356" <- function(fx = "out", dry = 1) {
+    hs.msg(ln = 1)
+    wjj_out_root <- "~/ssd1t"
+    if (!file.exists(wjj_out_root)) 
+        hs.browser("2023.07.29.013908", debug = 0)
+    if (0) {
+        wj_temp <- "~/.db/2023_07_29_010348" %=>% hs.wj
+        if (file.exists(wj_temp)) {
+            if (difftime(Sys.time(), file.mtime(wj_temp), units = "mins") > 
+                10) 
+                hs.browser("2023.07.29.013904", debug = 0)
+            dry <- 0
+            hs.wj.rm(wj_temp)
+        }
+        else {
+            dry <- 1
+            cat("", file = wj_temp)
+        }
+    }
+    ln_wjj2_db <- hs.home.expand("~/db/软件库")
+    db1 <- c("~/wk/", "~/ssd1t/备份/用rsync/wk/同步的/") %=>% 
+        hs.db
+    db2 <- c("~/.config/opera/", hs.fp(ln_wjj2_db, ".config/opera/"), 
+        "~/.cache/opera/", hs.fp(ln_wjj2_db, ".cache/opera/"), 
+        "~/.config/microsoft-edge/", hs.fp(ln_wjj2_db, ".config/microsoft-edge/"), 
+        "~/.cache/microsoft-edge/", hs.fp(ln_wjj2_db, ".cache/microsoft-edge/"), 
+        "~/.config/vivaldi/", hs.fp(ln_wjj2_db, ".config/vivaldi/"), 
+        "~/.cache/vivaldi/", hs.fp(ln_wjj2_db, ".cache/vivaldi/"), 
+        "~/.ssh/", "~/rjk/ln-s/.ssh/", "~/db/", "~/ssd1t/备份/用rsync/db/") %=>% 
+        hs.db
+    if (fx == "in") {
+        db1 %<=>% hs.db(x, inv = 1)
+        db2 %<=>% hs.db(x, inv = 1) %=>% rev
+    }
+    db <- c(db1, db2)
+    for (i in seq_along(db)) {
+        wjj1 <- names(db)[i]
+        wjj2 <- db[i]
+        short <- c(wjj1, wjj2) %=>% x[which.min(nchar(x))]
+        hs.msg(short, ln = 2)
+        wk.rsync(wjj1, wjj2, del = 1, dry = dry, ssh = {
+        }, bf_wjj0 = if (!dry) 
+            {
+                if ((short == "~/wk/") && (fx == "out")) {
+                  wjj2 %=>% hs.sub("[^/]*/$", "备份的/")
+                }
+                else if (short == "~/db/") 
+                  wjj2 %=>% hs.sub("/*$", ".备份/")
+            } %=>% {
+                if (length(x)) {
+                  if (!dir.exists(x)) 
+                    hs.browser("2023.08.29.235237", debug = 0)
+                  hs.wjj(x)
+                }
+            })
+        if (dry && (short == "~/wk/")) 
+            return()
+    }
+    if (fx == "in") {
+        .wk("chmod 600 ~/.ssh/*")
+    }
+    hs.msg()
 }
 "2023_06_09_121941" <- function(wj) {
     wj %=>% sapply(x, . %=>% .wk("du -s", hs.fpGood(x), intern = 1)) %=>% 
